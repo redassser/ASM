@@ -39,7 +39,7 @@
         }
     }
 
-{ //asm sub layer
+function trigger() { //asm sub layer
     mov(2,rbx);
     mov(1,rax)
     and(rax,rbx)
