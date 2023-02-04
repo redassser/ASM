@@ -1,18 +1,19 @@
     // A B C D
-const q1 = [0,8], q2 = [8,8],  q3 = [16,8], q4 = [24,8],
-      d1 = [4,4], d2 = [12,4], d3 = [20,4], d4 = [28,4],
-      s1 = [6,2], s2 = [14,2], s3 = [22,2], s4 = [30,2],
+export const 
+        q1 = [0,8], q2 = [8,8],  q3 = [16,8], q4 = [24,8],
+        d1 = [4,4], d2 = [12,4], d3 = [20,4], d4 = [28,4],
+        s1 = [6,2], s2 = [14,2], s3 = [22,2], s4 = [30,2],
     // SI DI BP SP
-      q5 = [32,8], q6 =[40,8], q7 = [48,8], q8 = [56,8],
-      d5 = [36,4], d6 =[44,4], d7 = [52,4], d8 = [60,4],
-      s5 = [38,2], s6 =[46,2], s7 = [54,2], s8 = [62,2];
+        q5 = [32,8], q6 =[40,8], q7 = [48,8], q8 = [56,8],
+        d5 = [36,4], d6 =[44,4], d7 = [52,4], d8 = [60,4],
+        s5 = [38,2], s6 =[46,2], s7 = [54,2], s8 = [62,2],
     // Registers
-    var intRegisters = new Uint8Array(128); //16 64-bit [128 bytes] registers :
+        intRegisters = new Uint8Array(128); //16 64-bit [128 bytes] registers :
         //this.floatRegisters = new Float64Array(32*8); //32 vector registers
     // Memory
-    var mem;
-
-    var stop = false, rip = 0, eflags = {Z:0,N:0,C:0,O:0};
+export var 
+        mem,
+        stop = false, rip = 0, eflags = {Z:0,N:0,C:0,O:0};
 /* 
         All functions are assumed to have correct inputs
         Exceptions and edge cases are handled in translation layer
@@ -24,7 +25,7 @@ const q1 = [0,8], q2 = [8,8],  q3 = [16,8], q4 = [24,8],
     }
 // Set Flags end
 // ADD start
-    function add(regA, regB, regC) { // Quad, Double, Single
+    export function add(regA, regB, regC) { // Quad, Double, Single
         for(let i=regC[1];i>0;i--) {
             let sum = intRegisters[regA[0]+i] + intRegisters[regB[0]+i] + eflags.C;
             eflags.C = 0;
@@ -38,11 +39,11 @@ const q1 = [0,8], q2 = [8,8],  q3 = [16,8], q4 = [24,8],
     }
 // ADD end
 // MOV start
-    function mov(regFrom, regTo) { // Quad, Double, Single
+    export function mov(regFrom, regTo) { // Quad, Double, Single
         for(let i=0;i<regTo[1];i++)
                 intRegisters[regTo[0]+i] = intRegisters[regFrom[0]+i];
     }
-    function moviq(int, regTo) { // Quad
+    export function moviq(int, regTo) { // Quad
         const buffer = new ArrayBuffer(8)
         new DataView(buffer).setBigUint64(0,BigInt(int))
         const view = new Uint8Array(buffer)
@@ -51,29 +52,20 @@ const q1 = [0,8], q2 = [8,8],  q3 = [16,8], q4 = [24,8],
     }
 // MOV end
 // AND start
-    function and(regA, regB, regC) { // Quad, Double, Single
+    export function and(regA, regB, regC) { // Quad, Double, Single
         for(let i=0;i<regC[1];i++)
             intRegisters[regC[0]+i] = intRegisters[regA[0]+i] & intRegisters[regB[0]+i];
     }
 // AND end
 // OR start
-    function or(regA, regB, regC) { // Quad, Double, Single
+    export function or(regA, regB, regC) { // Quad, Double, Single
         for(let i=0;i<regC[1];i++)
             intRegisters[regC[0]+i] = intRegisters[regA[0]+i] | intRegisters[regB[0]+i];
     }
 // OR end
 // xOR start
-    function xor(regA, regB, regC) { // Quad, Double, Single
+    export function xor(regA, regB, regC) { // Quad, Double, Single
         for(let i=0;i<regC[1];i++)
             intRegisters[regC[0]+i] = intRegisters[regA[0]+i] ^ intRegisters[regB[0]+i];
     }
 // XOR end
-
-
-function trigger() { //asm sub layer
-    movi("18446744073709551615",rax);
-    movi("1",rcx);
-    add(rax, rcx);
-    console.log(intRegisters)
-}
-trigger();
