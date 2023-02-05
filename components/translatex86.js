@@ -8,6 +8,7 @@ const regs = {
 }
 
 export function translatex86(input) {
+    console.log("got")
     if(!input) return;
     var errorstack = []; const lines = input.split(/\n/);
     for(let i=0;i<lines.length;i++) {

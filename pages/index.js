@@ -15,10 +15,12 @@ export default function Home() {
     const [regs, setRegs] = useState(x86.intRegisters)
     function handleInput(evt) {
         setInput(evt.target.value);
+        console.log(input)
     }
     function handleSubmit() {
         translatex86(input)
         setRegs(x86.intRegisters.slice(0))
+        console.log("h", x86.intRegisters)
     }
     return(
     <>
