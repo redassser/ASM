@@ -11,7 +11,7 @@ const regs = {
     "%eax": x.d1, "%ebx": x.d2, "%ecx": x.d3, "%edx": x.d4,
      "%ax": x.s1,  "%bx": x.s2,  "%cx": x.s3,  "%dx": x.s4
 }
-function translatex86(input) {
+export default function translatex86(input) {
     var errorstack = []; const lines = teststring.split(/\n/);
     for(let i=0;i<lines.length;i++) {
         let op = lines[i].split(/,?\s/);
@@ -38,10 +38,3 @@ function translatex86(input) {
         }
     }
 }
-
-function trigger(){
-    x.moviq(6,x.q1);
-    console.log(x.intRegisters)
-}
-translatex86()
-console.log(x.intRegisters)
