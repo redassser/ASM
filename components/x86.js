@@ -1,4 +1,4 @@
-import cpu from "./cpu";
+import cpu from "/components/cpu";
 
 export default class x86cpu extends cpu {
     exec(location) {

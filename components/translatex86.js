@@ -1,4 +1,4 @@
-import x86cpu from "../components/x86"
+import x86cpu from "/components/x86"
 
 export const x86 = new x86cpu(1024)
 const regs = {

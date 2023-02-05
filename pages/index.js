@@ -1,5 +1,5 @@
 import { useState } from "react"
-import {x86,translatex86} from "../components/translatex86"
+import {x86,translatex86} from "/components/translatex86"
 /*
     CURRENT ORDER OF OPERATIONS
     -> Class cpu is defined with base functionality  -> ../components/cpu.js

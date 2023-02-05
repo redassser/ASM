@@ -8,5 +8,6 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start"
-    }
+    },
+    "homepage": "https://redassser.github.io/ASM/"
 }
