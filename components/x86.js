@@ -1,6 +1,8 @@
 import cpu from "/components/cpu";
 
 export default class x86cpu extends cpu {
+    regnames = [["rax",this.rax], ["rbx",this.rbx], ["rcx",this.rcx], ["rdx",this.rdx],
+                ["rsi",this.rsi], ["rdi",this.rdi], ["rbp",this.rbp], ["rsp",this.rsp]]
     exec(location) {
         //this.rip = location
         // start executing machine language
@@ -28,7 +30,9 @@ export default class x86cpu extends cpu {
         this.mem[offset + a + (b * m)] = this.intRegs[toReg];
     }
 
-    add() {} // same thing
+    add(fromReg, toReg) {
+        super.add(fromReg,toReg,toReg);
+    } // same thing
     sub() {}
     imul() {} // signed multiply, same thing
     div() {} // restricted to just one register dx for some of the data, weird hardcoding

@@ -16,17 +16,17 @@ export default class cpu {
         this.intRegisters = new Uint8Array(128);
         this.fpRegs = new Uint8Array(32*64); // 32 zmm registers, each has 64 bytes (512 bits) AVX512
         this.rip = new BigUint64Array(1); // PC on intel is called rip, 64 bits
-        this.eflags = {};
+        this.eflags = {C:0,O:0};
         this.mem = new Uint8Array(memSize); // 1Mb for your machine
     }
     add(regA, regB, regC) { // Quad, Double, Single
         for(let i=regC[1];i>0;i--) {
-            let sum = this.intRegisters[regA[0]+i] + this.intRegisters[regB[0]+i] + eflags.C;
-            eflags.C = 0;
-            if(sum>255) {eflags.C=1; intRegisters[regC[0]+i]=255}
+            let sum = this.intRegisters[regA[0]+i] + this.intRegisters[regB[0]+i] + this.eflags.C;
+            this.eflags.C = 0;
+            if(sum>255) {this.eflags.C=1; intRegisters[regC[0]+i]=255}
             else intRegisters[regC[0]+i]=sum;
         }   
-        if(eflags.C>0) {eflags.O=1}
+        if(this.eflags.C>0) {this.eflags.O=1}
     }
     mov(regFrom, regTo) { // Quad, Double, Single
         for(let i=0;i<regTo[1];i++)

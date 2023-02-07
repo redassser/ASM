@@ -13,21 +13,28 @@ import {x86,translatex86} from "/components/translatex86"
 export default function Home() {
     const [input, setInput] = useState("mov $5 %rax ") //Initial state
     const [regs, setRegs] = useState(x86.intRegisters)
+    
     function handleInput(evt) {
         setInput(evt.target.value);
-        console.log(input)
     }
     function handleSubmit() {
         translatex86(input)
         setRegs(x86.intRegisters.slice(0))
-        console.log("h", x86.intRegisters)
     }
     return(
     <>
         <input type="text" value={input} onChange={evt => handleInput(evt)}/>
         <button onClick={handleSubmit}>Execute</button>
         <p>Below are the integer registers. Every number is a byte</p>
-        <p>{regs.join(" ")}</p>
+        <div>
+            {x86.regnames.map((item,ind) => {
+                const bytes = new Uint8Array(regs.slice(item[1][0],item[1][1]+item[1][0])).buffer;
+                const big = new DataView(bytes).getBigUint64();
+                var hex = big.toString(16).toUpperCase(), bin = big.toString(10);
+                if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
+                return(<div key={item[0]}>{item[0]+" : "+hex+" : "+bin}</div>)
+            })}
+        </div>
     </>
     )
 }
