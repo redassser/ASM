@@ -1,0 +1,8 @@
+body {
+    font-family: monospace;
+    background-color: rgb(34, 34, 34);
+    width:fit-content;
+    margin: auto;
+    padding: 10px;
+    color: white;
+}

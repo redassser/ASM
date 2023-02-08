@@ -1,0 +1,58 @@
+.submit {
+    position: relative;
+    top:60px;
+    left: 90px;
+    background-color: black;
+    color:white;
+    border: 0;
+    font-family: monospace;
+}
+.submit:hover {
+    background-color:darkseagreen;
+}
+.submit:active {
+    background-color: green;
+}
+.input {
+    resize:none;
+    background-color: black;
+    color: white;
+    border-width: 0;
+    padding: 5px;
+    width: 100%;
+}
+.inptitle {
+    color: white;
+    position: relative;
+    top: 27px;
+    width: max-content;
+    background-color: black;
+    left: 30px;
+    padding: 4px;
+}
+.regtitle {
+    color: white;
+    position: relative;
+    top: 27px;
+    width: max-content;
+    background-color: black;
+    left: 30px;
+    padding: 4px;
+}
+.regdiv {
+    background-color:black;
+    display: flex;
+    flex-flow: row wrap;
+    padding: 5px;
+    min-width: 20rem;
+    max-width: 50rem;
+    border: 2px solid white;
+    outline: 10px solid black;
+}
+.register {
+    color:aliceblue;
+    font-size: .8srem;
+    padding: .6rem;
+    flex: 40%;
+    min-width: 22rem
+}
