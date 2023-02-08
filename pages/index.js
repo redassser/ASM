@@ -14,21 +14,23 @@ import styles from "/components/index.module.css"
 export default function Home() {
     const [input, setInput] = useState("mov $5 %rax ") //Initial state
     const [regs, setRegs] = useState(x86.intRegisters)
+    const [err, setErr] = useState("");
     
     function handleInput(evt) {
         setInput(evt.target.value);
     }
     function handleSubmit() {
-        translatex86(input)
+        const errors = translatex86(input).join("\n");
         setRegs(x86.intRegisters.slice(0))
+        setErr(errors);
     }
     return(
     <> 
         <h1>x86 Assembler</h1>
         <button className={styles.submit} onClick={handleSubmit}>Click to Execute</button>
-        <p className={styles.inptitle}>Input</p>
+        <p className={styles.title}>Input</p>
         <div className={styles.regdiv}><textarea className={styles.input} value={input} onChange={evt => handleInput(evt)}/></div>
-        <p className={styles.regtitle}>Integer Registers</p>
+        <p className={styles.title}>Integer Registers</p>
         <div className={styles.regdiv}>
             {x86.regnames.map((item,ind) => {
                 const bytes = new Uint8Array(regs.slice(item[1][0],item[1][1]+item[1][0])).buffer;
@@ -38,6 +40,8 @@ export default function Home() {
                 return(<div className={styles.register} key={item[0]}>{item[0]+" : "+hex+" : "+bin}</div>)
             })}
         </div>
+        <p className={styles.title}>Output console</p>
+        <div className={styles.regdiv}><textarea id="con" disabled className={styles.input} value={err}></textarea></div>
     </>
     )
 }

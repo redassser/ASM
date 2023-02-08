@@ -21,16 +21,7 @@
     padding: 5px;
     width: 100%;
 }
-.inptitle {
-    color: white;
-    position: relative;
-    top: 27px;
-    width: max-content;
-    background-color: black;
-    left: 30px;
-    padding: 4px;
-}
-.regtitle {
+.title {
     color: white;
     position: relative;
     top: 27px;
