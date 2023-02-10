@@ -32,10 +32,9 @@ export default function Home() {
         <div className={styles.regdiv}><textarea spellCheck="false" className={styles.input} value={input} onChange={evt => handleInput(evt)}/></div>
         <p className={styles.title}>Integer Registers</p>
         <div className={styles.regdiv}>
-            {x86.regnames.map((item,ind) => {
-                const bytes = new Uint8Array(regs.slice(item[1][0],item[1][1]+item[1][0])).buffer;
-                const big = new DataView(bytes).getBigUint64();
-                var hex = big.toString(16).toUpperCase(), bin = big.toString(10);
+            {x86.intregs.map((item,ind) => {
+                const bytes = regs[ind];
+                var hex = bytes.toString(16).toUpperCase(), bin = bytes.toString(10);
                 if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
                 return(<div className={styles.register} key={item[0]}>{item[0]+" : 0x"+hex+" : "+bin}</div>)
             })}

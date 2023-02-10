@@ -1,8 +1,17 @@
 import cpu from "/components/cpu";
 
 export default class x86cpu extends cpu {
-    regnames = [["rax",this.rax], ["rbx",this.rbx], ["rcx",this.rcx], ["rdx",this.rdx],
-                ["rsi",this.rsi], ["rdi",this.rdi], ["rbp",this.rbp], ["rsp",this.rsp]]
+    intregs = [["rax","eax","ax"],["rbx","ebx","bx"],["rcx","rcx","cx"],["rdx","edx","dx"],
+            ["rsi","esi","si"],["rdi","edi","di"],["rbp","ebp","bp"],["rsp","ebp","bp"]]
+    fpregnames = [["zmm0", this.zmm0]]
+    regPos(reg) {
+        for(var i=0;i<this.intregs.length;i++)
+            if(this.intregs[i].includes(reg)) return i;
+        return -1;
+    }
+    getSize(reg) {
+        return (this.intregs[this.regPos(reg)].indexOf(reg));
+    }
     exec(location) {
         //this.rip = location
         // start executing machine language
@@ -17,10 +26,11 @@ export default class x86cpu extends cpu {
     }
 
     mov(fromReg, toReg) {  // mov %rbx, %rcx
-        super.mov(fromReg,toReg);
+        super.mov(this.regPos(fromReg),this.regPos(toReg));
     }
     movi(c, toReg) { //immediate mode, load the register with a constant   mov $123, %rax
-        super.moviq(c,toReg);
+        var regpos = this.regPos(toReg);
+        super.movi(c,regpos);
     }
     movin(offset, a, b, m) {      //  movq 16(%rax, %rbx, 8), %r9
         this.intRegs[toReg] = this.mem[offset + a + (b * m)];
@@ -31,7 +41,6 @@ export default class x86cpu extends cpu {
     }
 
     add(fromReg, toReg) {
-        super.add(fromReg,toReg,toReg);
     } // same thing
     sub() {}
     imul() {} // signed multiply, same thing
