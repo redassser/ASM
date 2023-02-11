@@ -1,9 +1,14 @@
 import cpu from "/components/cpu";
 
 export default class x86cpu extends cpu {
-    intregs = [["rax","eax","ax"],["rbx","ebx","bx"],["rcx","rcx","cx"],["rdx","edx","dx"],
-            ["rsi","esi","si"],["rdi","edi","di"],["rbp","ebp","bp"],["rsp","ebp","bp"]]
-    fpregnames = [["zmm0", this.zmm0]]
+    intregs=[["rax","eax","ax"],["rbx","ebx","bx"],["rcx","rcx","cx"],["rdx","edx","dx"],
+             ["rsi","esi","si"],["rdi","edi","di"],["rbp","ebp","bp"],["rsp","ebp","bp"],
+             ["r8","r8d","r8w"],["r9","r9d","r9w"],["r10","r10d","r10w"],["r11","r11d","r11w"],
+             ["r12","r12d","r12w"],["r13","r13d","r13w"],["r14","r14d","r14w"],["r15","r15d","r15w"]]
+    floatregs=[ ["zmm0","ymm0","xmm0"],["zmm1","ymm1","xmm1"],["zmm2","ymm2","xmm2"],["zmm3","ymm3","xmm3"],
+                ["zmm4","ymm4","xmm4"],["zmm5","ymm5","xmm5"],["zmm6","ymm6","xmm6"],["zmm7","ymm7","xmm7"],
+                ["zmm8","ymm8","xmm8"],["zmm9","ymm9","xmm9"],["zmm10","ymm10","xmm10"],["zmm11","ymm11","xmm11"],
+                ["zmm12","ymm12","xmm12"],["zmm13","ymm13","xmm13"],["zmm14","ymm14","xmm14"],["zmm15","ymm15","xmm15"]]
     regPos(reg) {
         for(var i=0;i<this.intregs.length;i++)
             if(this.intregs[i].includes(reg)) return i;

@@ -14,7 +14,7 @@
     background-color: green;
 }
 .input {
-    resize:none;
+    resize:vertical;
     background-color: black;
     color: white;
     border-width: 0;
