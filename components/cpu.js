@@ -10,17 +10,17 @@ export default class cpu {
         this.eflags = {C:0,O:0};
         this.mem = new Uint8Array(memSize); // 1Mb for your machine
     }
-    //TODO redo add
     add(regA, regB, regC) { // Quad, Double, Single 
-
+        this.intRegisters[regC]=this.intRegisters[regA]+this.intRegisters[regB];
+    }
+    addi(int, regB, regC) {
+        this.intRegisters[regC] = BigInt(int+this.intRegisters[regB]);
     }
     mov(regFrom, regTo) { // Quad, Double, Single
-        console.log(regFrom,regTo)
         this.intRegisters[regTo] = this.intRegisters[regFrom];
     }
     movi(int, regTo) { // Quad, Double, Single
-        console.log(regTo, int)
-            this.intRegisters[regTo] = BigInt(int);
+        this.intRegisters[regTo] = BigInt(int);
     }
     and(regA, regB, regC) { // Quad, Double, Single
         for(let i=0;i<regC[1];i++)

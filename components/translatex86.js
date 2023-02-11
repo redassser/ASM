@@ -24,21 +24,21 @@ export function translatex86(input) {
         return ret;
     }
     //Modifies Integers
-    function integerModifier(Line, Reg, int) {
-        if(isNaN(int)) {errorstack.push("Line:"+Line+": Error: "+int+" is not an integer");}
+    function numberModifier(Line, Reg, num) {
+        if(isNaN(parseInt(num))) {errorstack.push("Line:"+Line+": Error: "+num+" is not a number (defaulted to 0)"); return 0;}
         var n;
         switch(x86.getSize(Reg)) {
             case 0: // 64-bit
-                n = new BigUint64Array(1); n[0] = int;
-                if(int>n) errorstack.push("Line:"+Line+": Warning: "+int+" shortened to "+n);
+                n = new BigUint64Array(1); n[0] = BigInt(num);
+                if(BigInt(num)>n) errorstack.push("Line:"+Line+": Warning: "+num+" shortened to "+n);
                 break;
             case 1: // 32-bit
-                n = intcap = new Uint32Array(1); n[0] = int;
-                if(int>n) errorstack.push("Line:"+Line+": Warning: "+int+" shortened to "+n);
+                n = new Uint32Array(1); n[0] = num;
+                if(parseInt(num)>n) errorstack.push("Line:"+Line+": Warning: "+num+" shortened to "+n);
                 break;
             default: // 16-bit
-                n = new Uint16Array(1); n[0] = int;
-                if(int>n) errorstack.push("Line:"+Line+": Warning: "+int+" shortened to "+n);
+                n = new Uint16Array(1); n[0] = num;
+                if(parseInt(num)>n) errorstack.push("Line:"+Line+": Warning: "+num+" shortened to "+n);
                 break;
         }
         return n[0]
@@ -51,9 +51,14 @@ export function translatex86(input) {
                 break;
             case "mov":
                 if (errorCatcherSupreme(i,op,"mov",2)) return errorstack;
+                if(op[0].startsWith("0x")) {
+                    var intop=op[0], regop=op[1].substring(1);
+                    intop = numberModifier(i, regop, intop);
+                    x86.movi(intop,regop);
+                }
                 if(op[0].startsWith('$')) {
                     var intop=op[0].substring(1), regop=op[1].substring(1);
-                    intop = integerModifier(i, regop, intop);
+                    intop = numberModifier(i, regop, intop);
                     x86.movi(intop,regop);
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
@@ -61,7 +66,20 @@ export function translatex86(input) {
                 }  
                 break;
             case "add":
-                break;
+                if (errorCatcherSupreme(i,op,"add",2)) return errorstack;
+                if(op[0].startsWith("0x")) {
+                    var intop=op[0], regop=op[1].substring(1);
+                    intop = numberModifier(i, regop, intop);
+                    x86.addi(intop,regop);
+                }
+                if(op[0].startsWith('$')) {
+                    var intop=op[0].substring(1), regop=op[1].substring(1);
+                    intop = numberModifier(i, regop, intop);
+                    x86.addi(intop,regop);
+                } else if(op[0].startsWith('%')) {
+                    const regop=op[0].substring(1), regop2=op[1].substring(1);
+                    x86.add(regop,regop2);
+                }  
             default:
         }
     }

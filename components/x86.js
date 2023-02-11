@@ -34,8 +34,7 @@ export default class x86cpu extends cpu {
         super.mov(this.regPos(fromReg),this.regPos(toReg));
     }
     movi(c, toReg) { //immediate mode, load the register with a constant   mov $123, %rax
-        var regpos = this.regPos(toReg);
-        super.movi(c,regpos);
+        super.movi(c,this.regPos(toReg));
     }
     movin(offset, a, b, m) {      //  movq 16(%rax, %rbx, 8), %r9
         this.intRegs[toReg] = this.mem[offset + a + (b * m)];
@@ -46,7 +45,11 @@ export default class x86cpu extends cpu {
     }
 
     add(fromReg, toReg) {
-    } // same thing
+        super.add(this.regPos(fromReg),this.regPos(toReg),this.regPos(toReg));
+    }
+    addi(c, toReg) {
+        super.addi(c,this.regPos(toReg),this.regPos(toReg));
+    }
     sub() {}
     imul() {} // signed multiply, same thing
     div() {} // restricted to just one register dx for some of the data, weird hardcoding
