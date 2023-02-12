@@ -4,7 +4,8 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
-    var errorstack = []; const lines = input.split(/\n/);
+    var errorstack = [], codestack = [], pointer = x86.intRegisters[x86.regPos("ebp")];
+    const lines = input.split(/\n/); 
     //Catches errors
     function errorCatcherSupreme(Line, OperandArray, OperationName, NumberOfInputs) {
         var ret = 0;
@@ -25,7 +26,7 @@ export function translatex86(input) {
     }
     //Modifies Integers
     function numberModifier(Line, Reg, num) {
-        if(isNaN(parseInt(num))) {errorstack.push("Line:"+Line+": Error: "+num+" is not a number (defaulted to 0)"); return 0;}
+        if(isNaN(parseInt(num))) {errorstack.push("Line:"+Line+": Error: "+num+" is not a number"); return undefined;}
         var n;
         switch(x86.getSize(Reg)) {
             case 0: // 64-bit
@@ -50,38 +51,36 @@ export function translatex86(input) {
             case undefined:
                 break;
             case "mov":
-                if (errorCatcherSupreme(i,op,"mov",2)) return errorstack;
+                if (errorCatcherSupreme(i,op,"mov",2)) break;
                 if(op[0].startsWith("0x")) {
                     var intop=op[0], regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);
-                    x86.movi(intop,regop);
-                }
-                if(op[0].startsWith('$')) {
+                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
+                    codestack.push([pointer.toString(16),"movi",intop,regop]);
+                } else if(op[0].startsWith('$')) {
                     var intop=op[0].substring(1), regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);
-                    x86.movi(intop,regop);
+                    intop = numberModifier(i, regop, intop); if(intop===undefined) break;
+                    codestack.push([pointer.toString(16),"movi",intop,regop]);
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    x86.mov(regop,regop2);
+                    codestack.push([pointer.toString(16),"mov",regop,regop2]);
                 }  
                 break;
             case "add":
-                if (errorCatcherSupreme(i,op,"add",2)) return errorstack;
+                if (errorCatcherSupreme(i,op,"add",2)) break;
                 if(op[0].startsWith("0x")) {
                     var intop=op[0], regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);
-                    x86.addi(intop,regop);
-                }
-                if(op[0].startsWith('$')) {
+                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
+                    codestack.push([pointer.toString(16),"addi",intop,regop]);
+                } else if(op[0].startsWith('$')) {
                     var intop=op[0].substring(1), regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);
-                    x86.addi(intop,regop);
+                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
+                    codestack.push([pointer.toString(16),"addi",intop,regop]);
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    x86.add(regop,regop2);
+                    codestack.push([pointer.toString(16),"add",regop,regop2]);
                 }  
             default:
         }
     }
-    return errorstack;
+    return {stack:codestack,errors:errorstack}
 }

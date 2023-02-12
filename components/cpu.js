@@ -23,16 +23,13 @@ export default class cpu {
         this.intRegisters[regTo] = BigInt(int);
     }
     and(regA, regB, regC) { // Quad, Double, Single
-        for(let i=0;i<regC[1];i++)
-            intRegisters[regC[0]+i] = intRegisters[regA[0]+i] & intRegisters[regB[0]+i];
+        
     }
     or(regA, regB, regC) { // Quad, Double, Single
-        for(let i=0;i<regC[1];i++)
-            intRegisters[regC[0]+i] = intRegisters[regA[0]+i] | intRegisters[regB[0]+i];
+
     }
     xor(regA, regB, regC) { // Quad, Double, Single
-        for(let i=0;i<regC[1];i++)
-            intRegisters[regC[0]+i] = intRegisters[regA[0]+i] ^ intRegisters[regB[0]+i];
+
     }
 }
 

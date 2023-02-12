@@ -16,31 +16,35 @@ export default function Home() {
     const [input, setInput] = useState("mov $5 %rax ") //Initial state
     const [regs, setRegs] = useState(x86.intRegisters)
     const [err, setErr] = useState("");
-    const [stk, setStk] = useState("");
+    const [stk, setStk] = useState([]);
     
     function handleStack() {
-        const stack = stackx86(input).join("\n");
-        setStk(stk);
+        x86.execAll(stk);
+        setRegs(x86.intRegisters.slice(0));
     }
     function handleInput(evt) {
         setInput(evt.target.value);
     }
     function handleSubmit() {
-        const errors = translatex86(input).join("\n");
-        setRegs(x86.intRegisters.slice(0))
-        setErr(errors);
+        const obj = translatex86(input);
+        setRegs(x86.intRegisters.slice(0));
+        setErr(obj.errors.join("\n"));
+        setStk(obj.stack);
     }
     return(
     <> 
         <h1>x86 Assembler</h1>
         {/* Text Input */}
-        <button className={styles.submit} onClick={handleSubmit}>Execute All</button>
-        <button className={styles.submit} onClick={handleStack}>| Move to Stack</button>
+        <button className={styles.submit} onClick={handleSubmit}>Compile and Move To Stack</button>
         <p className={styles.title}>Input</p>
         <div className={styles.regdiv}><textarea spellCheck="false" className={styles.input} value={input} onChange={evt => handleInput(evt)}/></div>
         {/* Stack Output */}
+        <button className={styles.submit} onClick={handleStack}>Execute All</button>
         <p className={styles.title}>Stack</p>
-        <div className={styles.regdiv}><textarea id="stk" disabled className={styles.input} value={stk}></textarea></div>
+        <div className={styles.regdiv}><textarea id="stk" disabled className={styles.input} value={stk.join("\n")}></textarea></div>
+        {/* Output Console */}
+        <p className={styles.title}>Output console</p>
+        <div className={styles.regdiv}><textarea id="con" disabled className={styles.input} value={err}></textarea></div>
         {/* Integer Registers */}
         <p className={styles.title}>Integer Registers</p>
         <div className={styles.regdiv}>
@@ -58,9 +62,6 @@ export default function Home() {
                 return(<div className={styles.register} key={item[0]}>{item[0]}</div>);
             })}
         </div>
-        {/* Output Console */}
-        <p className={styles.title}>Output console</p>
-        <div className={styles.regdiv}><textarea id="con" disabled className={styles.input} value={err}></textarea></div>
     </>
     )
 }

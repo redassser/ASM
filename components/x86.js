@@ -2,7 +2,7 @@ import cpu from "/components/cpu";
 
 export default class x86cpu extends cpu {
     intregs=[["rax","eax","ax"],["rbx","ebx","bx"],["rcx","rcx","cx"],["rdx","edx","dx"],
-             ["rsi","esi","si"],["rdi","edi","di"],["rbp","ebp","bp"],["rsp","ebp","bp"],
+             ["rsi","esi","si"],["rdi","edi","di"],["rbp","ebp","bp"],["rsp","esp","sp"],
              ["r8","r8d","r8w"],["r9","r9d","r9w"],["r10","r10d","r10w"],["r11","r11d","r11w"],
              ["r12","r12d","r12w"],["r13","r13d","r13w"],["r14","r14d","r14w"],["r15","r15d","r15w"]]
     floatregs=[ ["zmm0","ymm0","xmm0"],["zmm1","ymm1","xmm1"],["zmm2","ymm2","xmm2"],["zmm3","ymm3","xmm3"],
@@ -17,17 +17,14 @@ export default class x86cpu extends cpu {
     getSize(reg) {
         return (this.intregs[this.regPos(reg)].indexOf(reg));
     }
-    exec(location) {
+    exec(array) {
         //this.rip = location
         // start executing machine language
     }
-
-    exec(program) {
-        //parse out instructions
-        //execute one by one
-        this.mov(rax, rbx);
-        this.add(rcx, rdx);
-        this.movi(5, rsi);
+    execAll(stackarray) {
+        stackarray.forEach(array => {
+            this.exec(array);
+        });
     }
 
     mov(fromReg, toReg) {  // mov %rbx, %rcx
