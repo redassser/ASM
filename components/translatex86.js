@@ -4,7 +4,7 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
-    var errorstack = [], codestack = [], pointer = x86.intRegisters[x86.regPos("ebp")];
+    var errorstack = [], codelist = [], pointer = 0;
     const lines = input.split(/\n/); 
     //Catches errors
     function errorCatcherSupreme(Line, OperandArray, OperationName, NumberOfInputs) {
@@ -55,14 +55,17 @@ export function translatex86(input) {
                 if(op[0].startsWith("0x")) {
                     var intop=op[0], regop=op[1].substring(1);
                     intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codestack.push([pointer.toString(16),"movi",intop,regop]);
+                    codelist.push([pointer,"movi",intop,regop]);
+                    pointer+=7;
                 } else if(op[0].startsWith('$')) {
                     var intop=op[0].substring(1), regop=op[1].substring(1);
                     intop = numberModifier(i, regop, intop); if(intop===undefined) break;
-                    codestack.push([pointer.toString(16),"movi",intop,regop]);
+                    codelist.push([pointer,"movi",intop,regop]);
+                    pointer+=7;
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    codestack.push([pointer.toString(16),"mov",regop,regop2]);
+                    codelist.push([pointer,"mov",regop,regop2]);
+                    pointer+=7;
                 }  
                 break;
             case "add":
@@ -70,17 +73,20 @@ export function translatex86(input) {
                 if(op[0].startsWith("0x")) {
                     var intop=op[0], regop=op[1].substring(1);
                     intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codestack.push([pointer.toString(16),"addi",intop,regop]);
+                    codelist.push([pointer,"addi",intop,regop]);
+                    pointer+=3;
                 } else if(op[0].startsWith('$')) {
                     var intop=op[0].substring(1), regop=op[1].substring(1);
                     intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codestack.push([pointer.toString(16),"addi",intop,regop]);
+                    codelist.push([pointer,"addi",intop,regop]);
+                    pointer+=3;
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    codestack.push([pointer.toString(16),"add",regop,regop2]);
+                    codelist.push([pointer,"add",regop,regop2]);
+                    pointer+=3;
                 }  
             default:
         }
     }
-    return {stack:codestack,errors:errorstack}
+    return {list:codelist,errors:errorstack}
 }

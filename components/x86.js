@@ -18,8 +18,20 @@ export default class x86cpu extends cpu {
         return (this.intregs[this.regPos(reg)].indexOf(reg));
     }
     exec(array) {
-        //this.rip = location
-        // start executing machine language
+        switch(array[1]) {
+            case "movi":
+                this.movi(array[2],array[3]);
+                break;
+            case "mov":
+                this.mov(array[2],array[3]);
+                break;
+            case "addi":
+                this.addi(array[2],array[3]);
+                break;
+            case "add":
+                this.add(array[2],array[3]);
+                break;
+        }
     }
     execAll(stackarray) {
         stackarray.forEach(array => {

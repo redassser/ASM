@@ -16,10 +16,20 @@ export default function Home() {
     const [input, setInput] = useState("mov $5 %rax ") //Initial state
     const [regs, setRegs] = useState(x86.intRegisters)
     const [err, setErr] = useState("");
-    const [stk, setStk] = useState([]);
+    const [list, setList] = useState([]);
+    const [listpointer, setP] = useState(0);
     
     function handleStack() {
-        x86.execAll(stk);
+        if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
+        x86.execAll(list.slice(listpointer));
+        setRegs(x86.intRegisters.slice(0));
+        setP(list.length);
+    }
+    function handleNext() {
+        if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
+        x86.exec(list[listpointer]);
+        setP(listpointer+1);
+        listChange(list);
         setRegs(x86.intRegisters.slice(0));
     }
     function handleInput(evt) {
@@ -29,7 +39,22 @@ export default function Home() {
         const obj = translatex86(input);
         setRegs(x86.intRegisters.slice(0));
         setErr(obj.errors.join("\n"));
-        setStk(obj.stack);
+        setList(obj.list);
+        setP(0);
+    }
+    function listChange(list) {
+        const h = [];
+        list.forEach((line, ind) => {
+            var prefix = " ";
+            if(ind==listpointer) {prefix=">"}
+            var hex = line[0].toString(16);
+            var mid = " <main+"+line[0]+">  ";
+            var vars = line.slice(2).join(",");
+            if(hex.length!=12) {hex = ("0".repeat(12-hex.length)+hex);}
+            if(mid.length!=16) {mid = (mid+" ".repeat(16-mid.length))}
+            h.push(prefix+"0x"+hex+mid+line[1]+"   "+vars);
+        });
+        return h
     }
     return(
     <> 
@@ -38,10 +63,11 @@ export default function Home() {
         <button className={styles.submit} onClick={handleSubmit}>Compile and Move To Stack</button>
         <p className={styles.title}>Input</p>
         <div className={styles.regdiv}><textarea spellCheck="false" className={styles.input} value={input} onChange={evt => handleInput(evt)}/></div>
-        {/* Stack Output */}
+        {/* ASM Output */}
         <button className={styles.submit} onClick={handleStack}>Execute All</button>
-        <p className={styles.title}>Stack</p>
-        <div className={styles.regdiv}><textarea id="stk" disabled className={styles.input} value={stk.join("\n")}></textarea></div>
+        <button className={styles.submit} onClick={handleNext}>| Execute Next</button>
+        <p className={styles.title}>Assembly</p>
+        <div className={styles.regdiv}><textarea id="list" disabled className={styles.input} value={listChange(list).join("\n")}></textarea></div>
         {/* Output Console */}
         <p className={styles.title}>Output console</p>
         <div className={styles.regdiv}><textarea id="con" disabled className={styles.input} value={err}></textarea></div>
