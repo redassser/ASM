@@ -65,7 +65,7 @@ export function translatex86(input) {
                 } else if(op[0].startsWith('%')) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
                     codelist.push([pointer,"mov",regop,regop2]);
-                    pointer+=7;
+                    pointer+=3;
                 }  
                 break;
             case "add":
@@ -84,7 +84,15 @@ export function translatex86(input) {
                     const regop=op[0].substring(1), regop2=op[1].substring(1);
                     codelist.push([pointer,"add",regop,regop2]);
                     pointer+=3;
-                }  
+                }
+            case "not":
+                if (errorCatcherSupreme(i,op,"not",1)) break;
+                if(op[0].startsWith('%')) {
+                    const regop=op[0].substring(1);
+                    codelist.push([pointer,"not",regop]);
+                    pointer+=3;
+                }
+                break;
             default:
         }
     }

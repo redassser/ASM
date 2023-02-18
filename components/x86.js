@@ -31,6 +31,9 @@ export default class x86cpu extends cpu {
             case "add":
                 this.add(array[2],array[3]);
                 break;
+            case "not":
+                this.not(array[2]);
+                break;
         }
     }
     execAll(stackarray) {
@@ -38,26 +41,30 @@ export default class x86cpu extends cpu {
             this.exec(array);
         });
     }
-
+    //Completed Instructions
     mov(fromReg, toReg) {  // mov %rbx, %rcx
         super.mov(this.regPos(fromReg),this.regPos(toReg));
     }
     movi(c, toReg) { //immediate mode, load the register with a constant   mov $123, %rax
         super.movi(c,this.regPos(toReg));
     }
-    movin(offset, a, b, m) {      //  movq 16(%rax, %rbx, 8), %r9
-        this.intRegs[toReg] = this.mem[offset + a + (b * m)];
-    }
-
-    movon(offset, a, b, m) {      //  movq  %r9, 16(%rax, %rbx, 8)
-        this.mem[offset + a + (b * m)] = this.intRegs[toReg];
-    }
-
     add(fromReg, toReg) {
         super.add(this.regPos(fromReg),this.regPos(toReg),this.regPos(toReg));
     }
     addi(c, toReg) {
         super.addi(c,this.regPos(toReg),this.regPos(toReg));
+    }
+    not(reg) { //Needs to change depending on Q, D, S
+        super.not(this.regPos(reg));
+    }
+    //End Completed
+
+    movon(offset, a, b, m) {      //  movq  %r9, 16(%rax, %rbx, 8)
+        this.mem[offset + a + (b * m)] = this.intRegs[toReg];
+    }
+
+    movin(offset, a, b, m) {      //  movq 16(%rax, %rbx, 8), %r9
+        this.intRegs[toReg] = this.mem[offset + a + (b * m)];
     }
     sub() {}
     imul() {} // signed multiply, same thing
@@ -65,6 +72,5 @@ export default class x86cpu extends cpu {
     and() {}
     or() {}
     xor() {}
-    not() {}
 
 }

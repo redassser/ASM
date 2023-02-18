@@ -10,10 +10,11 @@ export default class cpu {
         this.eflags = {C:0,O:0};
         this.mem = new Uint8Array(memSize); // 1Mb for your machine
     }
+    // Completed Instructions
     add(regA, regB, regC) { // Quad, Double, Single 
         this.intRegisters[regC]=this.intRegisters[regA]+this.intRegisters[regB];
     }
-    addi(int, regB, regC) {
+    addi(int, regB, regC) { //Quad, Double, Single
         this.intRegisters[regC] = BigInt(int+this.intRegisters[regB]);
     }
     mov(regFrom, regTo) { // Quad, Double, Single
@@ -22,6 +23,10 @@ export default class cpu {
     movi(int, regTo) { // Quad, Double, Single
         this.intRegisters[regTo] = BigInt(int);
     }
+    not(reg) {
+        this.intRegisters[reg] = this.intRegisters[reg];
+    }
+    //End Completed
     and(regA, regB, regC) { // Quad, Double, Single
         
     }
