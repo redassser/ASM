@@ -1,0 +1,67 @@
+/* Wrapper */
+.wrapper {
+    background-color: black;
+    display: flex;
+    flex-flow: row wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+/* Vertical Column Segment */
+.vertseg {
+    background-color:black;
+    border: 2px solid white;
+    outline: 10px solid black;
+    flex-grow: 1;
+}
+
+/* Segment Head */
+.seghead {
+    display: flex;
+    position: relative;
+    top: -10px;
+    left: 6px;
+    gap: 10px;
+}
+
+/* Head Parts */
+.headtitle {
+    background-color: black;
+    padding-left:3px; padding-right:3px;
+}
+.headbutton {
+    background-color: black;
+    color:darkseagreen;
+    border: 0;
+    font-family: monospace;
+}
+.headbutton:hover {
+    background-color:darkseagreen;
+    color: white;
+}
+.headbutton:active {
+    background-color: green;
+}
+
+/* Segment Body */
+.segbody {
+    position: relative;
+    top: -10px;
+}
+
+/* Body Parts */
+.bodytext {
+    resize:vertical;
+    background-color: black;
+    color: white;
+    border-width: 0;
+    width: 95%;
+    min-height: 4rem;
+}
+.bodytext:focus {
+    outline:0;
+}
+.register {
+    color:aliceblue;
+    font-size: .9rem;
+    padding-left: .5rem;
+}
