@@ -4,11 +4,29 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
-    var errorstack = [], codelist = [], pointer = 0;
-    const lines = input.split(/\n/); 
+    var errorstack = [], codelist = [], pointer = 0; const lines = input.split(/\n/); 
+    function lineParse(line) {
+        //let op = lines[i].trim().split(/,?\s+/);
+        const oplist = ["mov","movi","add","addi","not"]
+        var lineobj = {op:"nop",args:[]} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem",["5", "rax", "8"]] ]
+        const op = /[a-z]+/g.exec(line);
+        if(oplist.includes(op[0])) {
+            line.replace(/[a-z]+\s+/g,"");
+            const arglist = line.match(/(\$\d+)|(0x\d+)|(%\w+)/g);
+            lineobj.op = op[0];
+            lineobj.args = arglist.map(arg => {
+                var type;
+                if (arg.startsWith("0x")) {type="hex";}
+                else if (arg.startsWith("$")) {type="int";arg=arg.substring(1);}
+                else if (arg.startsWith("%")) {type="reg";arg=arg.substring(1);}
+                return [type, arg];
+            })
+        }
+        return lineobj;
+    }
     //Catches errors
-    function errorCatcherSupreme(Line, OperandArray, OperationName, NumberOfInputs) {
-        var ret = 0;
+    function errorCatcherSupreme(Line, LineObject, NumberOfInputs) {
+        var ret = 0; const OperationName = LineObject.op, OperandArray = LineObject.args;
         //Operands Mismatch 
         if(OperandArray.length!=NumberOfInputs) {
             errorstack.push("Line:"+Line+": Error: number of operands mismatch for `"+OperationName+"'");
@@ -16,9 +34,9 @@ export function translatex86(input) {
         }
         //Bad Register Names
         OperandArray.forEach(op => {
-            if(op.startsWith("%"))
-                if(!x86.intregs.flat(1).includes(op.substring(1))) {
-                    errorstack.push("Line:"+Line+": Error: bad register name `"+op+"'");
+            if(op[0]==="reg")
+                if(!x86.intregs.flat(1).includes(op[1])) {
+                    errorstack.push("Line:"+Line+": Error: bad register name `"+op[1]+"'");
                     ret++; return ret;
                 }
         });
@@ -46,55 +64,38 @@ export function translatex86(input) {
     }
     //Main caller
     for(let i=0;i<lines.length;i++) {
-        let op = lines[i].trim().split(/,?\s+/);
-        switch(op.shift()) {
-            case undefined:
-                break;
+        const lineobj = lineParse(lines[i]);
+        console.log(lineobj)
+        switch(lineobj.op) {
+            case "addi":
+            case "movi":
+                if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"nop"]); break; }
+                const intop = numberModifier(i, lineobj.args[1][1], lineobj.args[0][1]); if(intop===undefined) { codelist.push([pointer,"nop"]); break; }
+                codelist.push([pointer,lineobj.op,intop,lineobj.args[1][1]]);
+                pointer+=7;
+            case "add":
             case "mov":
-                if (errorCatcherSupreme(i,op,"mov",2)) break;
-                if(op[0].startsWith("0x")) {
-                    var intop=op[0], regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codelist.push([pointer,"movi",intop,regop]);
+                if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"nop"]); break; }
+                if(lineobj.args[0][0]=="int"||lineobj.args[0][0]=="hex") {
+                    const intop = numberModifier(i, lineobj.args[1][1], lineobj.args[0][1]); if(intop===undefined) { codelist.push([pointer,"nop"]); break; }
+                    codelist.push([pointer,lineobj.op+"i",intop,lineobj.args[1][1]]);
                     pointer+=7;
-                } else if(op[0].startsWith('$')) {
-                    var intop=op[0].substring(1), regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop); if(intop===undefined) break;
-                    codelist.push([pointer,"movi",intop,regop]);
-                    pointer+=7;
-                } else if(op[0].startsWith('%')) {
-                    const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    codelist.push([pointer,"mov",regop,regop2]);
+                } else if(lineobj.args[0][0]=="reg") {
+                    codelist.push([pointer,lineobj.op,lineobj.args[0][1],lineobj.args[1][1]]);
                     pointer+=3;
                 }  
                 break;
-            case "add":
-                if (errorCatcherSupreme(i,op,"add",2)) break;
-                if(op[0].startsWith("0x")) {
-                    var intop=op[0], regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codelist.push([pointer,"addi",intop,regop]);
-                    pointer+=3;
-                } else if(op[0].startsWith('$')) {
-                    var intop=op[0].substring(1), regop=op[1].substring(1);
-                    intop = numberModifier(i, regop, intop);if(intop===undefined) break;
-                    codelist.push([pointer,"addi",intop,regop]);
-                    pointer+=3;
-                } else if(op[0].startsWith('%')) {
-                    const regop=op[0].substring(1), regop2=op[1].substring(1);
-                    codelist.push([pointer,"add",regop,regop2]);
-                    pointer+=3;
-                }
             case "not":
-                if (errorCatcherSupreme(i,op,"not",1)) break;
-                if(op[0].startsWith('%')) {
-                    const regop=op[0].substring(1);
-                    codelist.push([pointer,"not",regop]);
+                if (errorCatcherSupreme(i,op,"not",1)) { codelist.push([pointer,"nop"]); break; }
+                if(lineobj.args[0][0]=="reg") {
+                    codelist.push([pointer,"not",lineobj.args[0][1]]);
                     pointer+=3;
                 }
                 break;
             default:
+                codelist.push([pointer,"nop"]);
         }
     }
+    console.log(errorstack)
     return {list:codelist,errors:errorstack}
 }
