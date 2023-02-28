@@ -5,16 +5,16 @@ export const x86 = new x86cpu(1024)
 export function translatex86(input) {
     if(!input) return;
     
-    var errorstack = [], codelist = [], pointer = 0; const lines = input.split(/\n/); 
+    var errorstack = [], codelist = [], functionstack = [], pointer = 0; const lines = input.split(/\n/); 
     function lineParse(line) {
         var comment = line.search("# ") === -1 ? line.length : line.search("# "); 
         line=line.substring(0,comment);
-        const oplist = ["mov","add","not"];
+        const oplist = ["mov","add","not",".globl"];
         var lineobj = {op:"nop",args:[],junk:[]} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem","(%rax, %rbx)"] ]
-        const op = /[a-z]+/g.exec(line);
-        if(oplist.includes(op[0])) {
+        const op = /[\.a-z]+/g.exec(line);
+        if(op!=null && oplist.includes(op[0])) {
             line.replace(/[a-z]+\s+/g,"");
-            const argregex = line.matchAll(/(?<mem>\(%\w+(,\s*%\w+)?\))|(?<int>(?<=\$)\d+)|(?<hex>0x\d+)|(?<reg>(?<=%)\w+)|(?<nam>\w+)/g);
+            const argregex = line.matchAll(/(?<mem>\(%\w+(,\s*%\w+)?\))|(?<int>(?<=\$)\d+)|(?<hex>0x\d+)|(?<reg>(?<=%)\w+)|(?<nam>[\.a-zA-Z0-9]+)/g);
             var argarray = [], junkarray = [];
             for(const arg of argregex) {
                 for (const [key, value] of Object.entries(arg.groups)) {
@@ -34,9 +34,11 @@ export function translatex86(input) {
     function errorCatcherSupreme(Line, LineObject, NumberOfInputs) {
         Line++
         var ret = 0; const OperationName = LineObject.op, OperandArray = LineObject.args;
+        const Junk = OperationName === ".globl" ? LineObject.junk.slice(1) : LineObject.junk;
         //Junk in the trunk
-        if (LineObject.junk.length!=0) {
-            errorstack.push("Line:"+Line+": Error: junk `"+LineObject.junk.join(", ")+"' somewhere");
+        
+        if (Junk.length!=0) {
+            errorstack.push("Line:"+Line+": Error: junk `"+Junk.join(", ")+"' somewhere");
             ret++; return ret;
         }
         //Operands Mismatch 
@@ -79,6 +81,11 @@ export function translatex86(input) {
         const lineobj = lineParse(lines[i]);
         console.log(lineobj)
         switch(lineobj.op) {
+            case ".globl":
+                if (errorCatcherSupreme(i,lineobj,0)) { codelist.push([pointer,"err"]); break; }
+                if(lineobj.junk.length==0) { errorstack.push("Line:"+(i+1)+": Error: expected symbol name"); codelist.push([pointer,"err"]); break; }
+                codelist.push([pointer,".globl",lineobj.junk[1]]);
+                break;
             case "add":
             case "mov":
                 if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"err"]); break; }
@@ -103,5 +110,5 @@ export function translatex86(input) {
         }
     }
     console.log(errorstack)
-    return {list:codelist,errors:errorstack}
+    return {list:codelist,errors:errorstack,funcs:functionstack}
 }
