@@ -4,29 +4,41 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
+    
     var errorstack = [], codelist = [], pointer = 0; const lines = input.split(/\n/); 
     function lineParse(line) {
-        //let op = lines[i].trim().split(/,?\s+/);
-        const oplist = ["mov","movi","add","addi","not"]
-        var lineobj = {op:"nop",args:[]} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem",["5", "rax", "8"]] ]
+        var comment = line.search("# ") === -1 ? line.length : line.search("# "); 
+        line=line.substring(0,comment);
+        const oplist = ["mov","add","not"];
+        var lineobj = {op:"nop",args:[],junk:[]} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem","(%rax, %rbx)"] ]
         const op = /[a-z]+/g.exec(line);
         if(oplist.includes(op[0])) {
             line.replace(/[a-z]+\s+/g,"");
-            const arglist = line.match(/(\$\d+)|(0x\d+)|(%\w+)/g);
+            const argregex = line.matchAll(/(?<mem>\(%\w+(,\s*%\w+)?\))|(?<int>(?<=\$)\d+)|(?<hex>0x\d+)|(?<reg>(?<=%)\w+)|(?<nam>\w+)/g);
+            var argarray = [], junkarray = [];
+            for(const arg of argregex) {
+                for (const [key, value] of Object.entries(arg.groups)) {
+                    if(value!=undefined) {
+                        if (key!="nam") argarray.push([key, arg[0]]);
+                        else if(op[0]!=value) junkarray.push(value);
+                    }
+                }
+            }
             lineobj.op = op[0];
-            lineobj.args = arglist.map(arg => {
-                var type;
-                if (arg.startsWith("0x")) {type="hex";}
-                else if (arg.startsWith("$")) {type="int";arg=arg.substring(1);}
-                else if (arg.startsWith("%")) {type="reg";arg=arg.substring(1);}
-                return [type, arg];
-            })
+            lineobj.args = argarray;
+            lineobj.junk = junkarray;
         }
         return lineobj;
     }
     //Catches errors
     function errorCatcherSupreme(Line, LineObject, NumberOfInputs) {
+        Line++
         var ret = 0; const OperationName = LineObject.op, OperandArray = LineObject.args;
+        //Junk in the trunk
+        if (LineObject.junk.length!=0) {
+            errorstack.push("Line:"+Line+": Error: junk `"+LineObject.junk.join(", ")+"' somewhere");
+            ret++; return ret;
+        }
         //Operands Mismatch 
         if(OperandArray.length!=NumberOfInputs) {
             errorstack.push("Line:"+Line+": Error: number of operands mismatch for `"+OperationName+"'");
@@ -67,18 +79,12 @@ export function translatex86(input) {
         const lineobj = lineParse(lines[i]);
         console.log(lineobj)
         switch(lineobj.op) {
-            case "addi":
-            case "movi":
-                if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"nop"]); break; }
-                const intop = numberModifier(i, lineobj.args[1][1], lineobj.args[0][1]); if(intop===undefined) { codelist.push([pointer,"nop"]); break; }
-                codelist.push([pointer,lineobj.op,intop,lineobj.args[1][1]]);
-                pointer+=7;
             case "add":
             case "mov":
-                if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"nop"]); break; }
+                if (errorCatcherSupreme(i,lineobj,2)) { codelist.push([pointer,"err"]); break; }
                 if(lineobj.args[0][0]=="int"||lineobj.args[0][0]=="hex") {
-                    const intop = numberModifier(i, lineobj.args[1][1], lineobj.args[0][1]); if(intop===undefined) { codelist.push([pointer,"nop"]); break; }
-                    codelist.push([pointer,lineobj.op+"i",intop,lineobj.args[1][1]]);
+                    const intop = numberModifier(i, lineobj.args[1][1], lineobj.args[0][1]); if(intop===undefined) { codelist.push([pointer,"err"]); break; }
+                    codelist.push([pointer,lineobj.op,intop,lineobj.args[1][1]]);
                     pointer+=7;
                 } else if(lineobj.args[0][0]=="reg") {
                     codelist.push([pointer,lineobj.op,lineobj.args[0][1],lineobj.args[1][1]]);
@@ -86,9 +92,9 @@ export function translatex86(input) {
                 }  
                 break;
             case "not":
-                if (errorCatcherSupreme(i,op,"not",1)) { codelist.push([pointer,"nop"]); break; }
+                if (errorCatcherSupreme(i,lineobj,1)) { codelist.push([pointer,"err"]); break; }
                 if(lineobj.args[0][0]=="reg") {
-                    codelist.push([pointer,"not",lineobj.args[0][1]]);
+                    codelist.push([pointer,lineobj.op,lineobj.args[0][1]]);
                     pointer+=3;
                 }
                 break;

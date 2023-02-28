@@ -8,7 +8,11 @@ export default class x86cpu extends cpu {
     floatregs=[ ["zmm0","ymm0","xmm0"],["zmm1","ymm1","xmm1"],["zmm2","ymm2","xmm2"],["zmm3","ymm3","xmm3"],
                 ["zmm4","ymm4","xmm4"],["zmm5","ymm5","xmm5"],["zmm6","ymm6","xmm6"],["zmm7","ymm7","xmm7"],
                 ["zmm8","ymm8","xmm8"],["zmm9","ymm9","xmm9"],["zmm10","ymm10","xmm10"],["zmm11","ymm11","xmm11"],
-                ["zmm12","ymm12","xmm12"],["zmm13","ymm13","xmm13"],["zmm14","ymm14","xmm14"],["zmm15","ymm15","xmm15"]]
+                ["zmm12","ymm12","xmm12"],["zmm13","ymm13","xmm13"],["zmm14","ymm14","xmm14"],["zmm15","ymm15","xmm15"],
+                ["zmm16","ymm16","xmm16"],["zmm17","ymm17","xmm17"],["zmm18","ymm18","xmm18"],["zmm19","ymm19","xmm19"],
+                ["zmm20","ymm20","xmm20"],["zmm21","ymm21","xmm21"],["zmm22","ymm22","xmm22"],["zmm23","ymm23","xmm23"],
+                ["zmm24","ymm24","xmm24"],["zmm25","ymm25","xmm25"],["zmm26","ymm26","xmm26"],["zmm27","ymm27","xmm27"],
+                ["zmm28","ymm28","xmm28"],["zmm29","ymm29","xmm29"],["zmm30","ymm30","xmm30"],["zmm31","ymm31","xmm31"]]
     regPos(reg) {
         for(var i=0;i<this.intregs.length;i++)
             if(this.intregs[i].includes(reg)) return i;
@@ -19,16 +23,12 @@ export default class x86cpu extends cpu {
     }
     exec(array) {
         switch(array[1]) {
-            case "movi":
-                this.movi(array[2],array[3]);
-                break;
             case "mov":
-                this.mov(array[2],array[3]);
-                break;
-            case "addi":
-                this.addi(array[2],array[3]);
+                if (typeof array[2]==="bigint" || typeof array[2]==="number") this.movi(array[2],array[3]); //Immediate
+                else this.mov(array[2],array[3]); //Both Registers
                 break;
             case "add":
+                if (typeof array[2]==="bigint" || typeof array[2]==="number") this.addi(array[2],array[3]); //Immediate
                 this.add(array[2],array[3]);
                 break;
             case "not":

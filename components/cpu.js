@@ -7,7 +7,7 @@ export default class cpu {
         this.intRegisters = new BigUint64Array(16); // 16 integer registers, each has 64 bytes
         this.fpRegs = new BigUint64Array(32*8); // 32 zmm registers, each has 64 bytes (512 bits) AVX512
         this.rip = new BigUint64Array(1); // PC on intel is called rip, 64 bits
-        this.eflags = {C:0,O:0};
+        this.rflags = new BigUint64Array(1);
         this.mem = new Uint8Array(memSize); // 1Mb for your machine
     }
     // Completed Instructions

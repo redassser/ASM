@@ -96,10 +96,10 @@ export default function Home() {
                 </div>
                 <div className={styles.segbody}>
                     {x86.intregs.map((item,ind) => {
-                        const bytes = regs[ind], name = (item[0].length==3) ? item[0] : "`"+item[0];
+                        const bytes = regs[ind], name = (item[0].length==3) ? item[0]+": " : item[0]+" : ";
                         var hex = bytes.toString(16).toUpperCase(), bin = bytes.toString(10);
                         if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
-                        return(<div className={styles.register} key={item[0]}>{name+" : 0x"+hex+" : "+bin}</div>)
+                        return(<div className={styles.register} key={item[0]}>{name+"0x"+hex+" : "+bin}</div>)
                     })}
                 </div>
             </div>
@@ -114,6 +114,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
+        <h2>1 Kilobyte of Memory</h2>
     </>
     )
 }
