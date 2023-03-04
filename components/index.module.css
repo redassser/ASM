@@ -29,9 +29,11 @@
     padding-left:3px; padding-right:3px;
 }
 .headbutton {
+    position: relative;
+    top: -2px;
     background-color: black;
     color:darkseagreen;
-    border: 0;
+    border: 2px solid darkseagreen;
     font-family: monospace;
 }
 .headbutton:hover {

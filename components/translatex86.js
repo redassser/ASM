@@ -18,6 +18,7 @@ export function translatex86(input) {
                 }
             }
         }
+        if(!line.replace(/\s/g, "")) return lineobj;
         lineobj.op = argarray.shift()[1]
         lineobj.args = argarray;
         return lineobj;
@@ -60,7 +61,6 @@ export function translatex86(input) {
         }
         //Bad Register Names
         OperandArray.forEach(op => {
-            console.log(op)
             if(op[0]==="reg")
                 if(!x86.intregs.flat(1).includes(op[1])) {
                     errorstack.push("Line:"+Line+": Error: bad register name `"+op[1]+"'");
@@ -87,6 +87,9 @@ export function translatex86(input) {
             case "not":
                 if (errorCatcherSupreme(i,lineobj,1,[["reg"]])) { codelist.push([pointer,"err"]); break; }
                 codelist.push([pointer,lineobj.op,lineobj.args[0][1]]);
+                break;
+            case "nop":
+                codelist.push([pointer,"nop"])
                 break;
             default:
                 errorstack.push("Line:"+(i+1)+": Error: "+lineobj.op+" is not a real operation");

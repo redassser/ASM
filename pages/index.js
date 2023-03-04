@@ -26,8 +26,11 @@ export default function Home() {
     }
     function handleNext() {
         if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
-        x86.exec(list[listpointer]);
-        setP(listpointer+1);
+        x86.exec(list[listpointer]); setP(listpointer+1);
+        var i = 1
+        if(list[listpointer+i]==undefined) {setErr(["The program has ended"]);return;}
+        while(list[listpointer+i]!=undefined && list[listpointer+i][1]==="nop") {i++;}
+        setP(listpointer+i);
         listChange(list);
         setRegs(x86.intRegisters.slice(0));
     }
@@ -51,7 +54,9 @@ export default function Home() {
             var vars = line.slice(2).join(",");
             if(hex.length!=12) {hex = ("0".repeat(12-hex.length)+hex);}
             if(mid.length!=16) {mid = (mid+" ".repeat(16-mid.length))}
-            h.push(prefix+"0x"+hex+mid+line[1]+"   "+vars);
+            if(line[1]==="nop") h.push(prefix);
+                else if(line[1]==="err") {h.push(prefix+"error")}
+                else h.push(prefix+"0x"+hex+mid+line[1]+"   "+vars);
         });
         return h
     }
@@ -72,7 +77,7 @@ export default function Home() {
                 <div className={styles.seghead}>
                     <div className={styles.headtitle}>Assembly</div>
                     <button className={styles.headbutton} onClick={handleStack}>Execute All</button>
-                    <button className={styles.headbutton} onClick={handleNext}>Execute Next</button>
+                    <button className={styles.headbutton} onClick={handleNext}>Execute Line</button>
                 </div>
                 <div className={styles.segbody}>
                     <textarea spellCheck="false" disabled className={styles.bodytext} style={{minWidth:"22rem"}} value={listChange(list).join("\n")} onChange={evt => handleInput(evt)}/>
@@ -101,6 +106,7 @@ export default function Home() {
                         if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
                         return(<div className={styles.register} key={item[0]}>{name+"0x"+hex+" : "+bin}</div>)
                     })}
+                    <div className={styles.register}>{"rip: "+listpointer}</div>
                 </div>
             </div>
             <div className={styles.vertseg}>
