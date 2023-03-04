@@ -19,6 +19,7 @@ export default class x86cpu extends cpu {
         return -1;
     }
     getSize(reg) {
+        console.log(reg)
         return (this.intregs[this.regPos(reg)].indexOf(reg));
     }
     exec(array) {
@@ -30,6 +31,10 @@ export default class x86cpu extends cpu {
             case "add":
                 if (typeof array[2]==="bigint" || typeof array[2]==="number") this.addi(array[2],array[3]); //Immediate
                 this.add(array[2],array[3]);
+                break;
+            case "xor":
+                if (typeof array[2]==="bigint" || typeof array[2]==="number") this.xori(array[2],array[3]); //Immediate
+                this.xor(array[2],array[3]);
                 break;
             case "not":
                 this.not(array[2]);
@@ -57,6 +62,12 @@ export default class x86cpu extends cpu {
     not(reg) { //Needs to change depending on Q, D, S
         super.not(this.regPos(reg));
     }
+    xor(fromReg, toReg) {
+        super.xor(this.regPos(fromReg),this.regPos(toReg),this.regPos(toReg));
+    }
+    xori(c, toReg) {
+        super.addi(c,this.regPos(toReg),this.regPos(toReg));
+    }
     //End Completed
 
     movon(offset, a, b, m) {      //  movq  %r9, 16(%rax, %rbx, 8)
@@ -71,6 +82,5 @@ export default class x86cpu extends cpu {
     div() {} // restricted to just one register dx for some of the data, weird hardcoding
     and() {}
     or() {}
-    xor() {}
 
 }

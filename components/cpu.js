@@ -26,6 +26,12 @@ export default class cpu {
     not(reg) {
         this.intRegisters[reg] = this.intRegisters[reg];
     }
+    xor(regA, regB, regC) { // Quad, Double, Single
+        this.intRegisters[regC] = this.intRegisters[regB] ^ this.intRegisters[regA];
+    }
+    xori(int, regB, regC) { // Quad, Double, Single
+        this.intRegisters[regC] = BigInt(int ^ this.intRegisters[regB]);
+    }
     //End Completed
     and(regA, regB, regC) { // Quad, Double, Single
         
@@ -33,9 +39,7 @@ export default class cpu {
     or(regA, regB, regC) { // Quad, Double, Single
 
     }
-    xor(regA, regB, regC) { // Quad, Double, Single
-
-    }
+    
 }
 
 /* 
