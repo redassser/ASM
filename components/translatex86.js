@@ -4,11 +4,11 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
-    var errorstack = [], codelist = [], functionstack = [], pointer = 0; const lines = input.split(/\n/); 
+    var errorstack = [], codelist = [], namesobj = {}, pointer = 0; const lines = input.split(/\n/); 
     function lineParse(line) {
         var comment = line.search("# ") === -1 ? line.length : line.search("# "); 
         line=line.substring(0,comment); var argarray = [];
-        var lineobj = {op:"nop",args:[],junk:[],size:0} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem","(%rax, %rbx)"] ]
+        var lineobj = {op:undefined,args:[],junk:[],size:0} //args format : [ ["hex","0x55fa"], ["int", "124634"], ["reg","rax"], ["mem","(%rax, %rbx)"] ]
         const argregex = line.matchAll(/(?<mem>\(%\w+(,\s*%\w+)?\))|(?<int>(?<=\$)\d+)|(?<hex>0x\w+)|(?<reg>(?<=%)\w+)|(?<nam>[\.a-zA-Z0-9\:]+)/g);
         for(const arg of argregex) {
             for (const [key, value] of Object.entries(arg.groups)) {
@@ -73,28 +73,47 @@ export function translatex86(input) {
     for(let i=0;i<lines.length;i++) {
         var lineobj = lineParse(lines[i]);
         switch(lineobj.op) {
+            case undefined:
+                break;
             case ".globl":
                 if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist.push([pointer,"err"]); break; }
                 break;
+            case "shr":
             case "xor":
             case "add":
             case "mov":
                 if (errorCatcherSupreme(i,lineobj,2,[["int","hex","reg"],["reg"]])) { codelist.push([pointer,"err"]); break; }
                 codelist.push([pointer,lineobj.op,lineobj.args[0][1],lineobj.args[1][1]]);
                 if(lineobj.args[0][0]==="reg") pointer+=3;
+                    else if(lineobj.op==="shr") {pointer=lineobj.args[0][1]==1?pointer+3:pointer+4;}
                     else pointer+=7;
                 break;
             case "not":
                 if (errorCatcherSupreme(i,lineobj,1,[["reg"]])) { codelist.push([pointer,"err"]); break; }
                 codelist.push([pointer,lineobj.op,lineobj.args[0][1]]);
                 break;
+            case "call":
+                if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist.push([pointer,"err"]); break; }
+                codelist.push([pointer,"call",lineobj.args[0][1]]);
+                pointer+=5;
+                break;
+            case "ret":
+                if (errorCatcherSupreme(i,lineobj,0,[])) { codelist.push([pointer,"err"]); break; }
+                codelist.push([pointer,"ret"]);
+                pointer+=1;
+                break;
             case "nop":
                 codelist.push([pointer,"nop"])
                 break;
             default:
-                errorstack.push("Line:"+(i+1)+": Error: "+lineobj.op+" is not a real operation");
-                codelist.push([pointer,"err"]);
+                if(lineobj.op.endsWith(":")) {
+                    if (errorCatcherSupreme(i,lineobj,0,[])) { codelist.push([pointer,"err"]); break; }
+                    namesobj[lineobj.op.slice(0,-1)] = pointer;
+                } else {
+                    errorstack.push("Line:"+(i+1)+": Error: "+lineobj.op+" is not a real operation");
+                    codelist.push([pointer,"err"]);
+                }
         }
     }
-    return {list:codelist,errors:errorstack,funcs:functionstack}
+    return {list:codelist,errors:errorstack,names:namesobj}
 }

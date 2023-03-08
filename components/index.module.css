@@ -48,6 +48,7 @@
 .segbody {
     position: relative;
     top: -10px;
+    height: 80%;
 }
 
 /* Body Parts */
@@ -56,7 +57,7 @@
     background-color: black;
     color: white;
     border-width: 0;
-    width: 95%;
+    width: 96%;
     min-height: 4rem;
 }
 .bodytext:focus {

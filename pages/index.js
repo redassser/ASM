@@ -17,6 +17,7 @@ export default function Home() {
     const [err, setErr] = useState("");
     const [list, setList] = useState([]);
     const [listpointer, setP] = useState(0);
+    const [names, setNames] = useState({main:0});
     
     function handleStack() {
         if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
@@ -26,11 +27,19 @@ export default function Home() {
     }
     function handleNext() {
         if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
-        x86.exec(list[listpointer]); setP(listpointer+1);
-        var i = 1
-        if(list[listpointer+i]==undefined) {setErr(["The program has ended"]);return;}
-        while(list[listpointer+i]!=undefined && list[listpointer+i][1]==="nop") {i++;}
-        setP(listpointer+i);
+        var j=1;
+        if(list[listpointer][1]==="call") {
+            x86.exec([list[listpointer][0],list[listpointer][1],names[list[listpointer][2]]]);
+            for(let i=listpointer;i<list.length;i++) {
+                if (list[i][0]!=names[list[listpointer][2]]) j++;
+                else {i=list.length;j--;};
+            }
+        } else {
+            x86.exec(list[listpointer]);
+        } 
+        x86.rip=list[listpointer+j][0];
+        setP(listpointer+j);
+        if(list[listpointer]==undefined) {setErr(["The program has ended"]);return;}
         listChange(list);
         setRegs(x86.intRegisters.slice(0));
     }
@@ -38,30 +47,41 @@ export default function Home() {
         setInput(evt.target.value);
     }
     function handleSubmit() {
+        x86.rip = 0; setP(x86.rip);
         const obj = translatex86(input);
         setRegs(x86.intRegisters.slice(0));
         setErr(obj.errors.join("\n"));
         setList(obj.list);
-        setP(0);
+        setNames(obj.names);
     }
     function listChange(list) {
         const h = [];
         list.forEach((line, ind) => {
-            var prefix = " ";
+            var prefix = " "; var thing = "main", sub = 0;
             if(ind==listpointer) {prefix=">"}
+            for(const prop in names) {
+                if(names[prop]<=line[0]) {thing = prop; sub = names[prop]}
+            }
+            var add = (line[0]-sub)===0 ? "" : "+"+(line[0]-sub);
             var hex = line[0].toString(16);
-            var mid = " <main+"+line[0]+">  ";
+            var mid = " <"+thing+""+add+">  ";
             var vars = line.slice(2).join(",");
             if(hex.length!=12) {hex = ("0".repeat(12-hex.length)+hex);}
             if(mid.length!=16) {mid = (mid+" ".repeat(16-mid.length))}
-            if(line[1]==="nop") h.push(prefix);
-                else if(line[1]==="err") {h.push(prefix+"error")}
+            if(line[1]==="err") {h.push(prefix+"error")}
                 else h.push(prefix+"0x"+hex+mid+line[1]+"   "+vars);
         });
         return h
     }
     return(
     <>
+        <div className={styles.wrapper} style={{display:"none"}} >
+            <div className={styles.vertseg}>
+                <div className={styles.seghead}>
+                    <button className={styles.headbutton}>Registers</button>
+                </div>
+            </div>
+        </div>
         <h1>Piedrahita x86 Assembler Simulator</h1>
         <div className={styles.wrapper}>
             <div className={styles.vertseg}>
@@ -69,7 +89,7 @@ export default function Home() {
                     <div className={styles.headtitle}>Input</div>
                     <button className={styles.headbutton} onClick={handleSubmit}>Compile</button>
                 </div>
-                <div className={styles.segbody} style={{height:"85%"}}>
+                <div className={styles.segbody}>
                     <textarea spellCheck="false" className={styles.bodytext} style={{resize:"none", height:"100%"}} value={input} onChange={evt => handleInput(evt)}/>
                 </div>
             </div>
@@ -106,7 +126,7 @@ export default function Home() {
                         if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
                         return(<div className={styles.register} key={item[0]}>{name+"0x"+hex+" : "+bin}</div>)
                     })}
-                    <div className={styles.register}>{"rip: "+listpointer}</div>
+                    <div className={styles.register}>{"rip: "+" : "+x86.rip}</div>
                 </div>
             </div>
             <div className={styles.vertseg}>

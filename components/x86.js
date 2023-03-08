@@ -19,7 +19,6 @@ export default class x86cpu extends cpu {
         return -1;
     }
     getSize(reg) {
-        console.log(reg)
         return (this.intregs[this.regPos(reg)].indexOf(reg));
     }
     exec(array) {
@@ -35,6 +34,9 @@ export default class x86cpu extends cpu {
             case "xor":
                 if (typeof array[2]==="bigint" || typeof array[2]==="number") this.xori(array[2],array[3]); //Immediate
                 this.xor(array[2],array[3]);
+                break;
+            case "call":
+                this.call(array[2])
                 break;
             case "not":
                 this.not(array[2]);
@@ -67,6 +69,9 @@ export default class x86cpu extends cpu {
     }
     xori(c, toReg) {
         super.addi(c,this.regPos(toReg),this.regPos(toReg));
+    }
+    call(loc) {
+        super.rip = loc;
     }
     //End Completed
 
