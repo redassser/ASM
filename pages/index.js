@@ -1,4 +1,4 @@
-import { use, useState } from "react"
+import { useState } from "react"
 import {x86,translatex86} from "/components/translatex86"
 import styles from "/components/index.module.css"
 /*
@@ -15,31 +15,22 @@ export default function Home() {
     const [input, setInput] = useState("mov $5 %rax ") //Initial state
     const [regs, setRegs] = useState(x86.intRegisters)
     const [err, setErr] = useState("");
-    const [list, setList] = useState([]);
-    const [listpointer, setP] = useState(0);
+    const [list, setList] = useState({});
     const [names, setNames] = useState({main:0});
     
     function handleStack() {
-        if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
-        x86.execAll(list.slice(listpointer));
+        if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
+        x86.execAll(list.slice(x86.rip));
         setRegs(x86.intRegisters.slice(0));
         setP(list.length);
     }
     function handleNext() {
-        if(listpointer>=list.length) {setErr(["The program has ended"]);return;}
-        var j=1;
-        if(list[listpointer][1]==="call") {
-            x86.exec([list[listpointer][0],list[listpointer][1],names[list[listpointer][2]]]);
-            for(let i=listpointer;i<list.length;i++) {
-                if (list[i][0]!=names[list[listpointer][2]]) j++;
-                else {i=list.length;j--;};
-            }
-        } else {
-            x86.exec(list[listpointer]);
-        } 
-        x86.rip=list[listpointer+j][0];
-        setP(listpointer+j);
-        if(list[listpointer]==undefined) {setErr(["The program has ended"]);return;}
+        if(list[x86.rip][1]==="call") list[x86.rip] = [0,"call",names[list[x86.rip][2]]];
+        var adder = list[x86.rip][0];
+        if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
+        x86.exec(list[x86.rip]);
+        x86.rip+=adder;
+        if(list[x86.rip]==undefined) {setErr(["The program has ended"]);return;}
         listChange(list);
         setRegs(x86.intRegisters.slice(0));
     }
@@ -47,7 +38,7 @@ export default function Home() {
         setInput(evt.target.value);
     }
     function handleSubmit() {
-        x86.rip = 0; setP(x86.rip);
+        x86.rip = 0; x86.movi(0x2000,"rbp")
         const obj = translatex86(input);
         setRegs(x86.intRegisters.slice(0));
         setErr(obj.errors.join("\n"));
@@ -56,21 +47,20 @@ export default function Home() {
     }
     function listChange(list) {
         const h = [];
-        list.forEach((line, ind) => {
+        for (const pointer in list) {
             var prefix = " "; var thing = "main", sub = 0;
-            if(ind==listpointer) {prefix=">"}
-            for(const prop in names) {
-                if(names[prop]<=line[0]) {thing = prop; sub = names[prop]}
-            }
-            var add = (line[0]-sub)===0 ? "" : "+"+(line[0]-sub);
-            var hex = line[0].toString(16);
+            if(pointer==x86.rip) {prefix=">"}
+            for(const prop in names)
+                if(names[prop]<=pointer) {thing = prop; sub = names[prop]}
+            var add = (pointer-sub)===0 ? "" : "+"+(pointer-sub);
+            var hex = pointer.toString(16);
             var mid = " <"+thing+""+add+">  ";
-            var vars = line.slice(2).join(",");
+            var vars = list[pointer].slice(2);
             if(hex.length!=12) {hex = ("0".repeat(12-hex.length)+hex);}
             if(mid.length!=16) {mid = (mid+" ".repeat(16-mid.length))}
-            if(line[1]==="err") {h.push(prefix+"error")}
-                else h.push(prefix+"0x"+hex+mid+line[1]+"   "+vars);
-        });
+            if(list[pointer][1]==="err") {h.push(prefix+"error")}
+                else h.push(prefix+"0x"+hex+mid+list[pointer][1]+"   "+vars);
+        }
         return h
     }
     return(

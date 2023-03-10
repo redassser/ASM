@@ -4,7 +4,7 @@ export const x86 = new x86cpu(1024)
 
 export function translatex86(input) {
     if(!input) return;
-    var errorstack = [], codelist = [], namesobj = {}, pointer = 0; const lines = input.split(/\n/); 
+    var errorstack = [], codelist = {}, namesobj = {}, pointer = 0; const lines = input.split(/\n/); 
     function lineParse(line) {
         var comment = line.search("# ") === -1 ? line.length : line.search("# "); 
         line=line.substring(0,comment); var argarray = [];
@@ -70,50 +70,58 @@ export function translatex86(input) {
         return ret;
     }
     //Main caller
+    var pointadder;
     for(let i=0;i<lines.length;i++) {
-        var lineobj = lineParse(lines[i]);
+        var lineobj = lineParse(lines[i]); pointadder = 0;
         switch(lineobj.op) {
             case undefined:
                 break;
             case ".globl":
-                if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist.push([pointer,"err"]); break; }
+                if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist[pointer] = ["err"]; break; }
                 break;
+            case "shl":
             case "shr":
             case "xor":
             case "add":
             case "mov":
-                if (errorCatcherSupreme(i,lineobj,2,[["int","hex","reg"],["reg"]])) { codelist.push([pointer,"err"]); break; }
-                codelist.push([pointer,lineobj.op,lineobj.args[0][1],lineobj.args[1][1]]);
-                if(lineobj.args[0][0]==="reg") pointer+=3;
-                    else if(lineobj.op==="shr") {pointer=lineobj.args[0][1]==1?pointer+3:pointer+4;}
-                    else pointer+=7;
+                if (errorCatcherSupreme(i,lineobj,2,[["int","hex","reg"],["reg"]])) { codelist[pointer] = ["err"]; break; }
+                codelist[pointer] = [lineobj.op,lineobj.args[0][1],lineobj.args[1][1]];
+                if(lineobj.args[0][0]==="reg") 
+                    pointadder=3;
+                else if(lineobj.op==="shr"||lineobj.op==="shl")
+                    pointadder=lineobj.args[0][1]==1?3:4;
+                else 
+                    pointadder=7;
                 break;
             case "not":
-                if (errorCatcherSupreme(i,lineobj,1,[["reg"]])) { codelist.push([pointer,"err"]); break; }
-                codelist.push([pointer,lineobj.op,lineobj.args[0][1]]);
+                if (errorCatcherSupreme(i,lineobj,1,[["reg"]])) { codelist[pointer] = ["err"]; break; }
+                codelist[pointer] = [lineobj.op,lineobj.args[0][1]];
                 break;
             case "call":
-                if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist.push([pointer,"err"]); break; }
-                codelist.push([pointer,"call",lineobj.args[0][1]]);
-                pointer+=5;
+                if (errorCatcherSupreme(i,lineobj,1,[["nam"]])) { codelist[pointer] = ["err"]; break; }
+                codelist[pointer] = ["call",lineobj.args[0][1]];
+                pointadder=5;
                 break;
             case "ret":
-                if (errorCatcherSupreme(i,lineobj,0,[])) { codelist.push([pointer,"err"]); break; }
-                codelist.push([pointer,"ret"]);
-                pointer+=1;
+                if (errorCatcherSupreme(i,lineobj,0,[])) { codelist[pointer] = ["err"]; break; }
+                codelist[pointer] = ["ret"];
+                pointadder=1;
                 break;
             case "nop":
-                codelist.push([pointer,"nop"])
+                codelist[pointer] = ["nop"];
                 break;
             default:
                 if(lineobj.op.endsWith(":")) {
-                    if (errorCatcherSupreme(i,lineobj,0,[])) { codelist.push([pointer,"err"]); break; }
+                    if (errorCatcherSupreme(i,lineobj,0,[])) { codelist[pointer] = ["err"]; break; }
                     namesobj[lineobj.op.slice(0,-1)] = pointer;
                 } else {
                     errorstack.push("Line:"+(i+1)+": Error: "+lineobj.op+" is not a real operation");
-                    codelist.push([pointer,"err"]);
+                    codelist[pointer] = ["err"];
                 }
         }
+        if(codelist[pointer])
+            codelist[pointer].unshift(pointadder);
+        pointer+=pointadder;
     }
     return {list:codelist,errors:errorstack,names:namesobj}
 }
