@@ -17,6 +17,7 @@ export default function Home() {
     const [err, setErr] = useState("");
     const [list, setList] = useState({});
     const [names, setNames] = useState({main:0});
+    var memSize = 32;
     
     function handleStack() {
         if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
@@ -25,7 +26,8 @@ export default function Home() {
         setP(list.length);
     }
     function handleNext() {
-        if(list[x86.rip][1]==="call") list[x86.rip] = [0,"call",names[list[x86.rip][2]]];
+        if(list[x86.rip][1]==="call") list[x86.rip] = [0,"call",list[x86.rip][2],names[list[x86.rip][2]]];
+        if(list[x86.rip][1]==="ret") list[x86.rip] = [0,"ret"];
         var adder = list[x86.rip][0];
         if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
         x86.exec(list[x86.rip]);
@@ -38,7 +40,7 @@ export default function Home() {
         setInput(evt.target.value);
     }
     function handleSubmit() {
-        x86.rip = 0; x86.movi(0x2000,"rbp")
+        x86.rip = 0; x86.movi(memSize-8,"rsp")
         const obj = translatex86(input);
         setRegs(x86.intRegisters.slice(0));
         setErr(obj.errors.join("\n"));
@@ -126,6 +128,18 @@ export default function Home() {
                 <div className={styles.segbody}>
                     {x86.floatregs.map((item,ind) => {
                         return(<div className={styles.register} key={item[0]}>{item[0]}</div>);
+                    })}
+                </div>
+            </div>
+        </div>
+        <div className={styles.wrapper}>
+            <div className={styles.vertseg}>
+                <div className={styles.seghead}>
+                    <div className={styles.headtitle}>Memory</div>
+                </div>
+                <div className={styles.segbody}>
+                    {Array.from(x86.mem).map((item,ind) => {
+                        return(<div className={styles.register} key={ind}>{item}</div>)
                     })}
                 </div>
             </div>

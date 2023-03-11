@@ -1,6 +1,6 @@
 import x86cpu from "/components/x86"
 
-export const x86 = new x86cpu(1024)
+export const x86 = new x86cpu(32)
 
 export function translatex86(input) {
     if(!input) return;

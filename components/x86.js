@@ -36,7 +36,10 @@ export default class x86cpu extends cpu {
                 this.xor(array[2],array[3]);
                 break;
             case "call":
-                this.call(array[2])
+                this.call(array[3])
+                break;
+            case "ret":
+                this.ret();
                 break;
             case "not":
                 this.not(array[2]);
@@ -71,7 +74,25 @@ export default class x86cpu extends cpu {
         super.addi(c,this.regPos(toReg),this.regPos(toReg));
     }
     call(loc) {
-        super.rip = loc;
+        const rsp = Number(this.intRegisters[this.regPos("esp")]);
+        const rip = new Uint8Array([this.rip+5]);
+        for(let i=0;i<8;i++) {
+            this.mem[rsp-i]=rip[i];
+        }
+
+        this.intRegisters[this.regPos("esp")] = BigInt(rsp-8);
+        this.rip = loc;
+    }
+    ret() {
+        this.intRegisters[this.regPos("esp")] = BigInt(Number(this.intRegisters[this.regPos("esp")])+8);
+        const rsp = Number(this.intRegisters[this.regPos("esp")]);
+        var rip = new Uint8Array(8);
+        for(let i=0;i<8;i++) {
+            rip[7-i]=this.mem[rsp-i];
+        }
+        var view = new DataView(rip.buffer)
+        console.log(view.getBigUint64())
+        this.rip = Number(view.getBigUint64());
     }
     //End Completed
 
