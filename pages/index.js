@@ -84,7 +84,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
-        <h1>Piedrahita x86 Assembler Simulator</h1>
+        <h1><a href="https://github.com/redassser/ASM">Piedrahita x86 Assembler Simulator</a></h1>
         <div className={styles.wrapper}>
             <div className={styles.vertseg}>
                 <div className={styles.seghead}>
@@ -154,7 +154,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
-        <h2>1 Kilobyte of Memory</h2>
+        <h2>32 Bytes of Memory</h2>
     </>
     )
 }
