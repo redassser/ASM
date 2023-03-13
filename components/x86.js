@@ -21,34 +21,42 @@ export default class x86cpu extends cpu {
     getSize(reg) {
         return (this.intregs[this.regPos(reg)].indexOf(reg));
     }
-    exec(array) {
+    exec(array,names) {
         switch(array[1]) {
             case "mov":
                 if (typeof array[2]==="bigint" || typeof array[2]==="number") this.movi(array[2],array[3]); //Immediate
                 else this.mov(array[2],array[3]); //Both Registers
+                this.rip+=array[0];
                 break;
             case "add":
                 if (typeof array[2]==="bigint" || typeof array[2]==="number") this.addi(array[2],array[3]); //Immediate
                 this.add(array[2],array[3]);
+                this.rip+=array[0];
                 break;
             case "xor":
                 if (typeof array[2]==="bigint" || typeof array[2]==="number") this.xori(array[2],array[3]); //Immediate
                 this.xor(array[2],array[3]);
+                this.rip+=array[0];
+                break;
+            case "shr":
+                this.shr(array[2]);
+                this.rip+=array[0];
                 break;
             case "call":
-                this.call(array[3])
+                this.call(names[array[2]]);
                 break;
             case "ret":
                 this.ret();
                 break;
             case "not":
                 this.not(array[2]);
+                this.rip+=array[0];
                 break;
         }
     }
-    execAll(stackarray) {
-        stackarray.forEach(array => {
-            this.exec(array);
+    execAll(arrayobject,names) {
+        Object.values(arrayobject).forEach(array => {
+            this.exec(array,names);
         });
     }
     //Completed Instructions
@@ -73,6 +81,9 @@ export default class x86cpu extends cpu {
     xori(c, toReg) {
         super.addi(c,this.regPos(toReg),this.regPos(toReg));
     }
+    shr(reg) {
+
+    }
     call(loc) {
         const rsp = Number(this.intRegisters[this.regPos("esp")]);
         const rip = new Uint8Array([this.rip+5]);
@@ -91,8 +102,8 @@ export default class x86cpu extends cpu {
             rip[7-i]=this.mem[rsp-i];
         }
         var view = new DataView(rip.buffer)
-        console.log(view.getBigUint64())
         this.rip = Number(view.getBigUint64());
+        if(this.rip==0) {this.rip=-1;}
     }
     //End Completed
 

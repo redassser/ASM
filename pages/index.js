@@ -9,11 +9,25 @@ import styles from "/components/index.module.css"
     -> User types into input box and submits using button -> ../pages/index.js (current)
     -> Input is translated into functions defined in class declaration x86 -> ../components/translatex86.js
 */
+const defaultcode = [    
+    ".globl main",
+    "main:",
+        "mov $6, %rcx",
+        "mov $7, %rdx",
+        "call f",
+        "ret",
+    
+        ".globl f",
+    "f:",
+        "mov %rdx, %rax",
+        "add %rcx, %rax",
+        "ret"
+        ].join("\n")
 
 
 export default function Home() {
-    const [input, setInput] = useState("mov $5 %rax ") //Initial state
-    const [regs, setRegs] = useState(x86.intRegisters)
+    const [input, setInput] = useState(defaultcode); //Initial state
+    const [regs, setRegs] = useState(x86.intRegisters);
     const [err, setErr] = useState("");
     const [list, setList] = useState({});
     const [names, setNames] = useState({main:0});
@@ -21,17 +35,12 @@ export default function Home() {
     
     function handleStack() {
         if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
-        x86.execAll(list.slice(x86.rip));
+        x86.execAll(list,names);
         setRegs(x86.intRegisters.slice(0));
-        setP(list.length);
     }
     function handleNext() {
-        if(list[x86.rip][1]==="call") list[x86.rip] = [0,"call",list[x86.rip][2],names[list[x86.rip][2]]];
-        if(list[x86.rip][1]==="ret") list[x86.rip] = [0,"ret"];
-        var adder = list[x86.rip][0];
-        if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
-        x86.exec(list[x86.rip]);
-        x86.rip+=adder;
+        if(x86.rip>=list.length||x86.rip<0) {setErr(["The program has ended"]);return;}
+        x86.exec(list[x86.rip],names);
         if(list[x86.rip]==undefined) {setErr(["The program has ended"]);return;}
         listChange(list);
         setRegs(x86.intRegisters.slice(0));
@@ -55,7 +64,8 @@ export default function Home() {
             for(const prop in names)
                 if(names[prop]<=pointer) {thing = prop; sub = names[prop]}
             var add = (pointer-sub)===0 ? "" : "+"+(pointer-sub);
-            var hex = pointer.toString(16);
+            var hex = new Uint32Array([pointer]);
+            hex = hex[0].toString(16);
             var mid = " <"+thing+""+add+">  ";
             var vars = list[pointer].slice(2);
             if(hex.length!=12) {hex = ("0".repeat(12-hex.length)+hex);}
@@ -118,7 +128,7 @@ export default function Home() {
                         if(hex.length<16) {hex="0".repeat(16-hex.length)+hex}
                         return(<div className={styles.register} key={item[0]}>{name+"0x"+hex+" : "+bin}</div>)
                     })}
-                    <div className={styles.register}>{"rip: "+" : "+x86.rip}</div>
+                    <div className={styles.register}>{"rip: "+"0x"+x86.rip.toString(16)+" : "+x86.rip}</div>
                 </div>
             </div>
             <div className={styles.vertseg}>
