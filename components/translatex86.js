@@ -27,6 +27,11 @@ export function translatex86(input) {
     function errorCatcherSupreme(Line, LineObject, NumberOfInputs, InputTypeArray) {
         Line++
         var ret = 0; const OperationName = LineObject.op, OperandArray = LineObject.args;
+        //Symbol Redefine
+        if(Object.keys(namesobj).includes(OperationName.slice(0,-1))) {
+            errorstack.push("Line:"+Line+": Error: symbol `"+OperationName+"' is already defined");
+            ret++; return ret;
+        }
         //Input Checking and Formatting
         for(let i=0;i<NumberOfInputs;i++) {
             var current = OperandArray[i]; var n;
