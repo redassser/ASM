@@ -4,6 +4,7 @@
 */
 export default class cpu {
     constructor(memSize) {
+        this.memSize = memSize;
         this.intRegisters = new BigUint64Array(16); // 16 integer registers, each has 64 bytes
         this.fpRegs = new BigUint64Array(32*8); // 32 zmm registers, each has 64 bytes (512 bits) AVX512
         this.rip = new BigUint64Array(1); // PC on intel is called rip, 64 bits
@@ -32,6 +33,7 @@ export default class cpu {
     xori(int, regB, regC) { // Quad, Double, Single
         this.intRegisters[regC] = BigInt(int ^ this.intRegisters[regB]);
     }
+    
     //End Completed
     and(regA, regB, regC) { // Quad, Double, Single
         

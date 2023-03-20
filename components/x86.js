@@ -13,6 +13,7 @@ export default class x86cpu extends cpu {
                 ["zmm20","ymm20","xmm20"],["zmm21","ymm21","xmm21"],["zmm22","ymm22","xmm22"],["zmm23","ymm23","xmm23"],
                 ["zmm24","ymm24","xmm24"],["zmm25","ymm25","xmm25"],["zmm26","ymm26","xmm26"],["zmm27","ymm27","xmm27"],
                 ["zmm28","ymm28","xmm28"],["zmm29","ymm29","xmm29"],["zmm30","ymm30","xmm30"],["zmm31","ymm31","xmm31"]]
+    rsp = this.regPos("rsp");
     regPos(reg) {
         for(var i=0;i<this.intregs.length;i++)
             if(this.intregs[i].includes(reg)) return i;
@@ -81,8 +82,29 @@ export default class x86cpu extends cpu {
     xori(c, toReg) {
         super.addi(c,this.regPos(toReg),this.regPos(toReg));
     }
-    shr(reg) {
-
+    readMem(reg, loc) {
+        var val = new Uint8Array(8);
+        for(let i=0;i<8;i++) {
+            val[i]=this.mem[loc+i]
+        }
+        this.intRegisters[reg] = new BigUint64Array([val]);
+    }
+    writeMem(reg, loc) {
+        var val = new Uint8Array([this.intRegisters[reg]])
+        for(let i=0;i<8;i++) {
+            this.mem[loc+i] = val[i];
+        }
+    }
+    push(reg) {
+        this.intRegisters[this.rsp]-=8;
+        this.writeMem(reg, this.intRegisters(this.rsp));
+    }
+    pop(reg) {
+        this.readMem(reg, this.intRegisters(this.rsp));
+        this.intRegisters[this.rsp]+=8;
+    }
+    shr(reg, num) {
+        this.intRegisters[this.regPos(reg)] = this.intRegisters[this.regPos(reg)] >> num;
     }
     call(loc) {
         const rsp = Number(this.intRegisters[this.regPos("esp")]);

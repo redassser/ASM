@@ -10,18 +10,18 @@ import styles from "/components/index.module.css"
     -> Input is translated into functions defined in class declaration x86 -> ../components/translatex86.js
 */
 const defaultcode = [    
-    ".globl main",
+    "   .globl main",
     "main:",
-        "mov $6, %rcx",
-        "mov $7, %rdx",
-        "call f",
-        "ret",
+    "   mov $6, %rcx",
+    "   mov $7, %rdx",
+    "   call f",
+    "   ret",
     
-        ".globl f",
+    "   .globl f",
     "f:",
-        "mov %rdx, %rax",
-        "add %rcx, %rax",
-        "ret"
+    "   mov %rdx, %rax",
+    "   add %rcx, %rax",
+    "   ret"
         ].join("\n")
 
 
@@ -31,29 +31,59 @@ export default function Home() {
     const [err, setErr] = useState("");
     const [list, setList] = useState({});
     const [names, setNames] = useState({main:0});
-    const [settings, setSettings] = useState({memSize:32,bytePerLine:16,baseAddress:32});
+    const [MemSettings, setMemSettings] = useState({displaySize:256,bytePerLine:16,grouping:8,baseAddress:32});
+    const [StackSettings, setStackSettings] = useState({displaySize:64,bytePerLine:8,grouping:8,baseAddress:x86.memSize-64});
+    var prevSP;
     
-    function handleStack() {
-        if(x86.rip>=list.length) {setErr(["The program has ended"]);return;}
-        x86.execAll(list,names);
-    }
-    function handleNext() {
-        if(x86.rip>=list.length||x86.rip<0) {setErr(["The program has ended"]);return;}
-        x86.exec(list[x86.rip],names);
-        if(list[x86.rip]==undefined) {setErr(["The program has ended"]);return;}
-        listChange(list);
+    function handleExec(opt) {
+        if(x86.rip[0]>=list.length||x86.rip[0]<0) {setErr(["The program has ended"]);return;}
+        if(opt==='n') x86.exec(list[x86.rip],names);
+        else if(opt==='a') x86.execAll(list,names);
         setRegs(x86.intRegisters.slice(0));
+        if(list[x86.rip]==undefined) {setErr(["The program has ended"]);return;}
     }
     function handleInput(evt) {
         setInput(evt.target.value);
     }
     function handleSubmit() {
-        x86.rip = 0; x86.movi(settings.memSize-8,"rsp")
+        x86.rip = 0; x86.movi(x86.memSize-8,"rsp")
         const obj = translatex86(input);
         setRegs(x86.intRegisters.slice(0));
         setErr(obj.errors.join("\n"));
         setList(obj.list);
         setNames(obj.names);
+    }
+    function displayByteHex(val) {
+        val=val.toString(16);
+        if((val).length<2) {val="0"+(val)};
+        return val;
+    }
+    function handleOpts(options,setting,type) {
+        var optarray = [];
+        for(const opt of options) {
+            var prefix = "";
+            if(opt===type[setting]) prefix="> ";
+            var temp = type; type[setting] = opt;
+            console.log(type[setting])
+            optarray.push(<button className={styles.option} key={opt} onClick={()=>setMemSettings(temp)}>{prefix+opt+" Bytes"}</button>);
+        }
+        return optarray;
+    }
+    function handleMem(settings) {
+        var memarray = [], j=1;
+        for(let i=settings.baseAddress;i<settings.baseAddress+settings.displaySize;i+=settings.bytePerLine) {
+            var prefix = " "; var byte = x86.mem[i];
+            var address = i.toString(16);
+            var hexstring = "";
+            for(let j=0;j<settings.bytePerLine;j++) {
+                if(j%settings.grouping==0) {hexstring+=" "}
+                hexstring+=displayByteHex(x86.mem[i+j]);
+            }
+            if(i==x86.intRegisters[x86.regPos("rsp")]) {prefix=">"}
+            if((address).length<8) {address="0".repeat(8-(address).length)+(address)}
+            memarray.push(<div className={styles.register} key={i}>{prefix+address+":"+hexstring}</div>)
+        }
+        return memarray;
     }
     function listChange(list) {
         const h = [];
@@ -75,8 +105,8 @@ export default function Home() {
         return h
     }
     return(
-    <>
-        <div style={{float:"left"}}> 
+    <div className={styles.home}>
+        <div className={styles.side}> 
             <div className={styles.wrapper} style={{display:"none"}} >
                 <div className={styles.vertseg}>
                     <div className={styles.seghead}>
@@ -98,8 +128,8 @@ export default function Home() {
                 <div className={styles.vertseg}>
                     <div className={styles.seghead}>
                         <div className={styles.headtitle}>Assembly</div>
-                        <button className={styles.headbutton} onClick={handleStack}>Execute All</button>
-                        <button className={styles.headbutton} onClick={handleNext}>Execute Line</button>
+                        <button className={styles.headbutton} onClick={()=>handleExec('a')}>Execute All</button>
+                        <button className={styles.headbutton} onClick={()=>handleExec('n')}>Execute Line</button>
                     </div>
                     <div className={styles.segbody}>
                         <textarea spellCheck="false" disabled className={styles.bodytext} style={{minWidth:"29rem",resize:"vertical"}} value={listChange(list).join("\n")} onChange={evt => handleInput(evt)}/>
@@ -143,21 +173,55 @@ export default function Home() {
                 </div>
             </div>
         </div>
-        <div style={{float:"right"}}>
-            <h1>32B</h1>
+        <div className={styles.side}>
+            <h1>Memory</h1>
+            <div className={styles.wrapper}>
+                <div className={styles.vertseg}>
+                    <div className={styles.seghead}>
+                        <div className={styles.headtitle}>Stack</div>
+                    </div>
+                    <div className={styles.segbody}>
+                        {handleMem(StackSettings)}
+                    </div>
+                </div>
+            </div>
             <div className={styles.wrapper}>
                 <div className={styles.vertseg}>
                     <div className={styles.seghead}>
                         <div className={styles.headtitle}>Memory</div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Bytes Per Row</div>
+                            <div className={styles.dropoptions} style={{width:"103px"}}>
+                                {handleOpts([32,16,8],"bytePerLine",MemSettings)}
+                            </div>
+                        </div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Display Size</div>
+                            <div className={styles.dropoptions} style={{width:"95px"}}>
+                                {[512,256,128].map(opt=>{
+                                    var prefix = "";
+                                    if(opt===MemSettings.displaySize) prefix="> ";
+                                    return(<button className={styles.option} onClick={()=>setMemSettings({...MemSettings,displaySize:opt})}>{prefix+opt+" Bytes"}</button>);
+                                })}
+                            </div>
+                        </div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Group Size</div>
+                            <div className={styles.dropoptions} style={{width:"80px"}}>
+                                {[4,8,16].map(opt=>{
+                                    var prefix = "";
+                                    if(opt===MemSettings.grouping) opt="> "+opt;
+                                    return(<button className={styles.option} onClick={()=>setMemSettings({...MemSettings,grouping:opt})}>{opt+" Bytes"}</button>);
+                                })}
+                            </div>
+                        </div>
                     </div>
                     <div className={styles.segbody}>
-                        {Array.from(x86.mem).map((item,ind) => {
-                            return(<div className={styles.register} key={ind}>{item}</div>)
-                        })}
+                        {handleMem(MemSettings)}
                     </div>
                 </div>
             </div>
         </div>
-    </>
+    </div>
     )
 }

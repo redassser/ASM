@@ -1,8 +1,13 @@
+/* Entire */
+.home {
+    display: flex;
+    gap: 10px;
+}
 /* Wrapper */
 .wrapper {
     background-color: black;
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: row nowrap;
     gap: 10px;
     margin-top: 20px;
 }
@@ -43,7 +48,35 @@
 .headbutton:active {
     background-color: green;
 }
-
+.dropdown {
+    display:block;
+    z-index: 1;
+}
+.dropbutton {
+    position: relative;
+    top: -2px;
+    padding: 1px;
+    padding-left: 4px; padding-right: 4px;
+    background-color: black;
+    color:lightblue;
+    border: 2px solid lightblue;
+    font-family: monospace;
+}
+.dropoptions {
+    position: absolute;
+    display: none;
+}
+.dropdown:hover .dropoptions {
+    display: flex;
+    flex-flow: column nowrap;
+}
+.option {
+    background-color: lightblue;
+    color:black;
+    border: 2px solid black;
+    width: 100%;
+    font-family: monospace;
+}
 /* Segment Body */
 .segbody {
     position: relative;
@@ -61,6 +94,7 @@
     min-height: 12rem;
     margin-bottom: 22px;
     flex-grow: 1;
+    white-space: pre;
 }
 .bodytext:focus {
     outline:0;
@@ -69,4 +103,6 @@
     color:aliceblue;
     font-size: .9rem;
     padding-left: .5rem;
+    padding-right: .5rem;
+    white-space: pre;
 }
