@@ -1,13 +1,10 @@
 import { useState } from "react"
-import {x86,translatex86} from "/components/translatex86"
+import {translatex86} from "/components/translatex86"
+import x86cpu from "/components/x86"
 import styles from "/components/index.module.css"
 /*
     CURRENT ORDER OF OPERATIONS
-    -> Class cpu is defined with base functionality  -> ../components/cpu.js
-    -> Class x86 is extended from class cpu, which transforms cpu functions into x86 compatible functions -> ../components/x86.js
-
-    -> User types into input box and submits using button -> ../pages/index.js (current)
-    -> Input is translated into functions defined in class declaration x86 -> ../components/translatex86.js
+    -> 
 */
 const defaultcode = [    
     "   .globl main",
@@ -23,9 +20,8 @@ const defaultcode = [
     "   add %rcx, %rax",
     "   ret"
         ].join("\n")
-
-
-export default function Home() {
+function Home() {
+    const [x86, setCpu] = useState(new x86cpu(4096));
     const [input, setInput] = useState(defaultcode); //Initial state
     const [regs, setRegs] = useState(x86.intRegisters);
     const [err, setErr] = useState("");
@@ -33,11 +29,10 @@ export default function Home() {
     const [names, setNames] = useState({main:0});
     const [MemSettings, setMemSettings] = useState({displaySize:256,bytePerLine:16,grouping:8,baseAddress:32});
     const [StackSettings, setStackSettings] = useState({displaySize:64,bytePerLine:8,grouping:8,baseAddress:x86.memSize-64});
-    var prevSP;
     
     function handleExec(opt) {
-        if(x86.rip[0]>=list.length||x86.rip[0]<0) {setErr(["The program has ended"]);return;}
-        if(opt==='n') x86.exec(list[x86.rip],names);
+        if(x86.rip[0]>=list.length||x86.rip<0) {setErr(["The program has ended"]);return;}
+        else if(opt==='n') x86.exec(list[x86.rip],names);
         else if(opt==='a') x86.execAll(list,names);
         setRegs(x86.intRegisters.slice(0));
         if(list[x86.rip]==undefined) {setErr(["The program has ended"]);return;}
@@ -58,30 +53,26 @@ export default function Home() {
         if((val).length<2) {val="0"+(val)};
         return val;
     }
-    function handleOpts(options,setting,type) {
+    function handleOpts(options,setting,type,func) {
         var optarray = [];
         for(const opt of options) {
-            var prefix = "";
-            if(opt===type[setting]) prefix="> ";
-            var temp = type; type[setting] = opt;
-            console.log(type[setting])
-            optarray.push(<button className={styles.option} key={opt} onClick={()=>setMemSettings(temp)}>{prefix+opt+" Bytes"}</button>);
+            var pref = (opt===type[setting]) ? "> " : "";
+            optarray.push(<button className={styles.option} key={opt} onClick={()=>{var newmem = {...type};newmem[setting]=opt;func(newmem);}}>{pref+opt+" Bytes"}</button>);
         }
         return optarray;
     }
     function handleMem(settings) {
         var memarray = [], j=1;
         for(let i=settings.baseAddress;i<settings.baseAddress+settings.displaySize;i+=settings.bytePerLine) {
-            var prefix = " "; var byte = x86.mem[i];
             var address = i.toString(16);
             var hexstring = "";
-            for(let j=0;j<settings.bytePerLine;j++) {
-                if(j%settings.grouping==0) {hexstring+=" "}
+            for(let j=settings.bytePerLine-1;j>=0;j--) {
                 hexstring+=displayByteHex(x86.mem[i+j]);
+                if(j%settings.grouping==0) {hexstring+=" "}
             }
-            if(i==x86.intRegisters[x86.regPos("rsp")]) {prefix=">"}
+            var prefix = (i==x86.intRegisters[x86.regPos("rsp")]) ? ">" : " ";
             if((address).length<8) {address="0".repeat(8-(address).length)+(address)}
-            memarray.push(<div className={styles.register} key={i}>{prefix+address+":"+hexstring}</div>)
+            memarray.push(<div className={styles.register} key={i}>{prefix+address+": "+hexstring}</div>)
         }
         return memarray;
     }
@@ -179,6 +170,24 @@ export default function Home() {
                 <div className={styles.vertseg}>
                     <div className={styles.seghead}>
                         <div className={styles.headtitle}>Stack</div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Bytes Per Row</div>
+                            <div className={styles.dropoptions} style={{width:"103px"}}>
+                                {handleOpts([32,16,8],"bytePerLine",StackSettings, setStackSettings)}
+                            </div>
+                        </div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Display Size</div>
+                            <div className={styles.dropoptions} style={{width:"95px"}}>
+                                {handleOpts([512,256,128,64],"displaySize",StackSettings, setStackSettings)}
+                            </div>
+                        </div>
+                        <div className={styles.dropdown}>
+                            <div className={styles.dropbutton}>Group Size</div>
+                            <div className={styles.dropoptions} style={{width:"83px"}}>
+                                {handleOpts([16,8,4],"grouping",StackSettings, setStackSettings)}
+                            </div>
+                        </div>
                     </div>
                     <div className={styles.segbody}>
                         {handleMem(StackSettings)}
@@ -187,32 +196,24 @@ export default function Home() {
             </div>
             <div className={styles.wrapper}>
                 <div className={styles.vertseg}>
-                    <div className={styles.seghead}>
+                    <div className={styles.seghead} style={{minWidth:"400px"}}>
                         <div className={styles.headtitle}>Memory</div>
                         <div className={styles.dropdown}>
                             <div className={styles.dropbutton}>Bytes Per Row</div>
                             <div className={styles.dropoptions} style={{width:"103px"}}>
-                                {handleOpts([32,16,8],"bytePerLine",MemSettings)}
+                                {handleOpts([32,16,8],"bytePerLine",MemSettings, setMemSettings)}
                             </div>
                         </div>
                         <div className={styles.dropdown}>
                             <div className={styles.dropbutton}>Display Size</div>
                             <div className={styles.dropoptions} style={{width:"95px"}}>
-                                {[512,256,128].map(opt=>{
-                                    var prefix = "";
-                                    if(opt===MemSettings.displaySize) prefix="> ";
-                                    return(<button className={styles.option} onClick={()=>setMemSettings({...MemSettings,displaySize:opt})}>{prefix+opt+" Bytes"}</button>);
-                                })}
+                                {handleOpts([512,256,128],"displaySize",MemSettings, setMemSettings)}
                             </div>
                         </div>
                         <div className={styles.dropdown}>
                             <div className={styles.dropbutton}>Group Size</div>
-                            <div className={styles.dropoptions} style={{width:"80px"}}>
-                                {[4,8,16].map(opt=>{
-                                    var prefix = "";
-                                    if(opt===MemSettings.grouping) opt="> "+opt;
-                                    return(<button className={styles.option} onClick={()=>setMemSettings({...MemSettings,grouping:opt})}>{opt+" Bytes"}</button>);
-                                })}
+                            <div className={styles.dropoptions} style={{width:"83px"}}>
+                                {handleOpts([16,8,4],"grouping",MemSettings, setMemSettings)}
                             </div>
                         </div>
                     </div>
@@ -225,3 +226,4 @@ export default function Home() {
     </div>
     )
 }
+export default Home;
